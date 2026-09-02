@@ -1,5 +1,11 @@
 @import "tailwindcss";
 
+@theme {
+  --font-sans: 'Inter', ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-serif: 'Instrument Serif', ui-serif, Georgia, serif;
+  --font-mono: 'Geist Mono', ui-monospace, 'SFMono-Regular', monospace;
+}
+
 :root {
   color-scheme: dark;
 }
@@ -10,11 +16,52 @@ html, body, #root {
 
 body {
   margin: 0;
-  background: #0a0f1e;
-  font-family: ui-sans-serif, system-ui, -apple-system, sans-serif;
+  background: #09090b;
+  color: #fafafa;
+  font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* Watermelon-style design tokens (dark theme) */
+:root {
+  --accent: #6d5cff;
+  --accent-soft: rgba(109, 92, 255, 0.12);
+  --emerald: #34d399;
+  --amber: #fbbf24;
+  --rose: #f87171;
+  --sky: #38bdf8;
+  --card: #0f0f12;
+  --card-border: rgba(255, 255, 255, 0.08);
+  --muted: #71717a;
 }
 
 .tabular {
   font-variant-numeric: tabular-nums;
+}
+
+/* thin scrollbars */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #3f3f46 transparent;
+}
+*::-webkit-scrollbar { width: 8px; height: 8px; }
+*::-webkit-scrollbar-thumb { background: #3f3f46; border-radius: 8px; }
+*::-webkit-scrollbar-track { background: transparent; }
+
+/* subtle grid background */
+.bg-grid {
+  background-image:
+    linear-gradient(rgba(255,255,255,0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.04) 1px, transparent 1px);
+  background-size: 44px 44px;
+}
+
+/* live dot pulse (anime-free CSS pulse reuse from Watermelon) */
+.live-dot-pulse {
+  animation: livePulse 1.6s ease-in-out infinite;
+}
+@keyframes livePulse {
+  0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(52,211,153,0.5); }
+  50% { opacity: 0.85; box-shadow: 0 0 0 5px rgba(52,211,153,0); }
 }
