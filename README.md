@@ -111,39 +111,69 @@ Breakdown by fault type:
 ---
 ## 🚀 Quick Start
 
+> **You'll need two terminals open** — one for the backend, one for the frontend.
+
 ### Prerequisites
 - **Node.js** 18+ and npm
 - **Python** 3.10+
 
-### 1. Backend
+### One-liner setup (from the repo root)
+
+```bash
+# Terminal 1 — Backend
+cd backend && python -m venv .venv && source .venv/bin/activate \
+  && pip install -r requirements.txt && uvicorn main:app --port 8000
+
+# Terminal 2 — Frontend
+cd frontend && npm install && npm run dev
+```
+
+### Step-by-step
+
+**1. Start the backend (Terminal 1)**
 
 ```bash
 cd backend
-python -m venv .venv
-source .venv/bin/activate        # Windows: .venv\Scripts\activate
-pip install -r requirements.txt
-uvicorn main:app --port 8000
+python -m venv .venv                # create virtual environment
+source .venv/bin/activate           # Windows: .venv\Scripts\activate
+pip install -r requirements.txt     # install dependencies
+uvicorn main:app --port 8000        # start API → http://localhost:8000
 ```
+
+You should see `Uvicorn running on http://127.0.0.1:8000`.
 
 > Optional: set `GEMINI_API_KEY` (or `OPENAI_API_KEY`) to enable the AI tier.
 > Without a key, a built-in rule-based judge handles exceptions so the demo
 > runs **fully offline**.
 
-### 2. Frontend
+**2. Start the frontend (Terminal 2)**
 
 ```bash
 cd frontend
-npm install
-npm run dev
+npm install              # only the first time
+npm run dev              # start dashboard → http://localhost:5173
 ```
 
-Open **http://localhost:5173** — the dev server proxies `/api` to the backend.
+**3. Open http://localhost:5173 in your browser**
 
-### 3. Try it
+The dev server proxies `/api` to the backend automatically, so no extra config.
 
-- Click **"Run Demo Data"** to generate 60 synthetic transactions and reconcile them instantly, or
-- Upload your own `razorpay_settlements.csv`, `bank_statements.csv`, and `orders.csv`
-  and click **"Run Reconciliation"**.
+### Try it
+
+- Click **"Run Demo Data"** → generates 60 synthetic transactions and reconciles them instantly with metrics.
+- Or upload your own `razorpay_settlements.csv`, `bank_statements.csv`, and `orders.csv`,
+  then click **"Run Reconciliation"**.
+
+> **Tip:** sample CSVs are generated into `data/synthetic/` the first time you
+> hit the demo endpoint — you can re-upload those as a custom run.
+
+### Quick sanity check (no browser needed)
+
+```bash
+# Backend running?
+curl http://localhost:8000/api/health        # → {"status":"ok",...}
+curl "http://localhost:8000/api/demo"        # → reconciliation metrics
+```
 
 ---
 
