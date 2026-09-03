@@ -1,16 +1,17 @@
 import { useEffect, useState } from 'react'
-import { animate, stagger } from 'animejs'
-import { Loader2, Zap, ShieldCheck, Flame, Scale } from 'lucide-react'
+import { animate } from 'animejs'
+import { Zap, ShieldCheck, Flame, Scale } from 'lucide-react'
+import Hero from './components/Hero'
+import FeatureSection from './components/FeatureSection'
 import { MetricCard } from './components/MetricCard'
 import { UploadCard } from './components/UploadCard'
 import { MatchTable } from './components/MatchTable'
 import { ExceptionTable } from './components/ExceptionTable'
 import { Charts } from './components/Charts'
-import { Button, LiveBadge } from './components/ui'
+import Footer from './components/Footer'
 import { introReveal, resultTimeline } from './lib/anim'
-import { runDemo, reconcile, checkHealth } from './lib/api'
+import { runDemo, reconcile } from './lib/api'
 import type { Match, Unmatched, Metrics } from './lib/types'
-import { cn } from './lib/utils'
 
 interface ResultState {
   matches: Match[]
@@ -20,7 +21,6 @@ interface ResultState {
 }
 
 function App() {
-  const [apiOnline, setApiOnline] = useState<boolean | null>(null)
   const [loading, setLoading] = useState(false)
   const [result, setResult] = useState<ResultState | null>(null)
   const [files, setFiles] = useState<{ razorpay: File | null; bank: File | null; orders: File | null }>({
@@ -30,17 +30,12 @@ function App() {
   })
 
   useEffect(() => {
-    checkHealth().then(setApiOnline)
     introReveal('.intro-item')
-  }, [])
-
-  useEffect(() => {
-    // Ambient breathing background blobs with anime
     animate('.bg-blob', {
       scale: [1, 1.15, 1],
       opacity: [0.9, 1, 0.9],
       duration: 8000,
-      delay: stagger(1200),
+      stagger: 1200,
       loop: true,
       ease: 'easeInOutSine',
     })
@@ -52,7 +47,6 @@ function App() {
 
   const handleRunDemo = async () => {
     setLoading(true)
-    setApiOnline(true)
     try {
       const data = await runDemo(true)
       setResult({
@@ -61,9 +55,12 @@ function App() {
         metrics: data.metrics,
         rate: Math.round((data.metrics.true_accuracy ?? 1) * 100),
       })
+      // Smooth scroll to dashboard after a beat
+      setTimeout(() => {
+        document.getElementById('demo')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      }, 400)
     } catch (e) {
       console.error(e)
-      setApiOnline(false)
     } finally {
       setLoading(false)
     }
@@ -82,20 +79,10 @@ function App() {
       })
     } catch (e) {
       console.error(e)
-      setApiOnline(false)
     } finally {
       setLoading(false)
     }
   }
-
-  const statusClass =
-    apiOnline === null
-      ? 'bg-zinc-800 text-zinc-400'
-      : apiOnline
-        ? 'bg-emerald-500/10 text-emerald-400'
-        : 'bg-rose-500/10 text-rose-400'
-
-  const statusLabel = apiOnline === null ? 'checking…' : apiOnline ? 'online' : 'offline'
 
   return (
     <div className="relative min-h-screen overflow-x-hidden">
@@ -106,82 +93,135 @@ function App() {
         <div className="bg-blob absolute bottom-0 left-1/3 h-[380px] w-[500px] rounded-full bg-fuchsia-600/5 blur-3xl" />
       </div>
 
-      <main className="mx-auto max-w-7xl px-6 py-8">
-        {/* Header */}
-        <header className="intro-item mb-8 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-violet-500 to-indigo-600 shadow-lg shadow-violet-950/50">
-              <Scale className="h-5 w-5 text-white" />
-            </div>
-            <div>
-              <h1 className="font-serif text-2xl leading-none tracking-tight text-zinc-100">
-                Reconcile-AI
-              </h1>
-              <p className="text-xs text-zinc-500">Settlement &amp; Reconciliation Agent</p>
-            </div>
-          </div>
-          <div className="ml-4 flex items-center gap-3">
-            <LiveBadge live={apiOnline !== false} />
-            <span className={cn('rounded-lg border border-transparent px-3 py-1.5 text-xs', statusClass)}>
-              API: {statusLabel}
-            </span>
-            <Button onClick={handleRunDemo} disabled={loading} variant="outline" className="gap-2">
-              {loading ? <Loader2 className="size-4 animate-spin" /> : <Zap className="size-4" />}
-              {loading ? 'Working…' : 'Run Demo Data'}
-            </Button>
-          </div>
-        </header>
+      {/* 1. Hero */}
+      <Hero onRunDemo={handleRunDemo} loading={loading} />
 
-        {/* Upload */}
-        <div className="intro-item mb-8">
-          <UploadCard onFiles={setFiles} onRun={handleRunUpload} loading={loading} />
+      {/* 2. Feature Section */}
+      <div id="features">
+        <FeatureSection />
+      </div>
+
+      {/* 3. How It Works — Architecture section */}
+      <section id="how-it-works" className="w-full py-24">
+        <div className="mx-auto max-w-6xl px-4">
+          <div className="mb-12 text-center">
+            <div className="intro-item mb-4 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-sm text-zinc-400">
+              <span className="h-2 w-2 rounded-full bg-violet-500" />
+              Three-tier engine
+            </div>
+            <h2 className="intro-item font-serif text-4xl tracking-tight text-zinc-100 md:text-5xl">
+              Deterministic first, AI last
+            </h2>
+            <p className="intro-item mx-auto mt-4 max-w-2xl text-lg text-zinc-400">
+              Every match is explainable. Rules decide the easy cases. An LLM only
+              arbitrates the genuinely ambiguous — and only when explicitly enabled.
+            </p>
+          </div>
+
+          {/* Tier cards */}
+          <div className="intro-item grid gap-6 md:grid-cols-3">
+            {[
+              {
+                tier: 'Tier 1',
+                name: 'Exact Match',
+                desc: 'Settlement reference, amount, and date are all identical. Instant, deterministic, 100% confidence.',
+                color: 'violet',
+              },
+              {
+                tier: 'Tier 2',
+                name: 'Fuzzy Match',
+                desc: 'Amount within ₹1, date within 1 day, reference similarity ≥ 0.80. Catches T+1 lag and typos.',
+                color: 'sky',
+              },
+              {
+                tier: 'Tier 3',
+                name: 'AI Agent',
+                desc: 'LLM reasons about fee gaps, ambiguous near-matches, and true orphans. Structured JSON output.',
+                color: 'emerald',
+              },
+            ].map((t) => (
+              <div
+                key={t.tier}
+                className="rounded-xl border border-white/10 bg-[#0f0f12] p-6"
+              >
+                <div className={`mb-3 inline-flex items-center gap-2 rounded-md bg-${t.color}-500/15 px-2 py-0.5 text-xs font-medium text-${t.color === 'violet' ? 'violet-300' : t.color === 'sky' ? 'sky-400' : 'emerald-400'}`}>
+                  {t.tier}
+                </div>
+                <h3 className="mb-2 text-lg font-semibold text-zinc-100">{t.name}</h3>
+                <p className="text-sm text-zinc-500">{t.desc}</p>
+              </div>
+            ))}
+          </div>
         </div>
+      </section>
 
-        {/* Processing */}
-        {loading && (
-          <div className="flex flex-col items-center py-16 text-zinc-300">
-            <div className="mb-4 h-12 w-12 animate-spin rounded-full border-4 border-violet-500 border-t-transparent" />
-            <p className="text-sm">Reconciling records across three sources…</p>
-          </div>
-        )}
-
-        {/* Results */}
-        {result && !loading && (
-          <div className="space-y-5">
-            <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-              <MetricCard
-                label="Transactions"
-                value={result.matches.length + result.exceptions.length}
-                icon={<Scale className="size-4" />}
-              />
-              <MetricCard
-                label="Matched"
-                value={result.matches.length}
-                icon={<ShieldCheck className="size-4" />}
-                tone="emerald"
-              />
-              <MetricCard
-                label="Exceptions"
-                value={result.exceptions.length}
-                icon={<Flame className="size-4" />}
-                tone="amber"
-              />
-              <MetricCard
-                label="Match Rate"
-                value={result.rate}
-                icon={<Zap className="size-4" />}
-                tone="violet"
-                trendText="auto"
-              />
+      {/* 4. Dashboard / Demo section */}
+      <section id="demo" className="w-full py-20">
+        <div className="mx-auto max-w-7xl px-6">
+          <div className="mb-10 text-center">
+            <div className="intro-item mb-4 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-sm text-zinc-400">
+              <Zap className="size-3.5 text-amber-400" />
+              Live dashboard
             </div>
-
-            <Charts matches={result.matches} metrics={result.metrics} rate={result.rate} />
-
-            <MatchTable matches={result.matches} />
-            <ExceptionTable exceptions={result.exceptions} />
+            <h2 className="intro-item font-serif text-4xl tracking-tight text-zinc-100">
+              See it in action
+            </h2>
           </div>
-        )}
-      </main>
+
+          {/* Upload */}
+          <div className="intro-item mb-8">
+            <UploadCard onFiles={setFiles} onRun={handleRunUpload} loading={loading} />
+          </div>
+
+          {/* Processing */}
+          {loading && (
+            <div className="flex flex-col items-center py-16 text-zinc-300">
+              <div className="mb-4 h-12 w-12 animate-spin rounded-full border-4 border-violet-500 border-t-transparent" />
+              <p className="text-sm">Reconciling records across three sources…</p>
+            </div>
+          )}
+
+          {/* Results */}
+          {result && !loading && (
+            <div className="space-y-5">
+              <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+                <MetricCard
+                  label="Transactions"
+                  value={result.matches.length + result.exceptions.length}
+                  icon={<Scale className="size-4" />}
+                />
+                <MetricCard
+                  label="Matched"
+                  value={result.matches.length}
+                  icon={<ShieldCheck className="size-4" />}
+                  tone="emerald"
+                />
+                <MetricCard
+                  label="Exceptions"
+                  value={result.exceptions.length}
+                  icon={<Flame className="size-4" />}
+                  tone="amber"
+                />
+                <MetricCard
+                  label="Match Rate"
+                  value={result.rate}
+                  icon={<Zap className="size-4" />}
+                  tone="violet"
+                  trendText="auto"
+                />
+              </div>
+
+              <Charts matches={result.matches} metrics={result.metrics} rate={result.rate} />
+
+              <MatchTable matches={result.matches} />
+              <ExceptionTable exceptions={result.exceptions} />
+            </div>
+          )}
+        </div>
+      </section>
+
+      {/* 5. Footer */}
+      <Footer />
     </div>
   )
 }
