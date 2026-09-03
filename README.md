@@ -1,7 +1,7 @@
 <p align="center">
   <img src="https://img.shields.io/badge/Buildathon-Razorpay%20AI-000000?style=for-the-badge" alt="Razorpay AI Buildathon" />
   <img src="https://img.shields.io/badge/Track-4%20Finance%20Controller-blue?style=for-the-badge" alt="Track 4 Finance Controller" />
-  <img src="https://img.shields.io/badge/Stack-React%20%7C%20FastAPI%20%7C%20anime.js-brightgreen?style=for-the-badge" alt="Stack" />
+  <img src="https://img.shields.io/badge/Stack-React%20%7C%20FastAPI%20%7C%20anime.js-brightgreen?style=for-the-badge" alt="Stlsack" />
 </p>
 
 <div align="center">
@@ -107,6 +107,118 @@ Breakdown by fault type:
 │  └─────────────────────────────────────────┘    │
 └─────────────────────────────────────────────────┘
 ```
+
+---
+
+## ⚙️ How It Works — Under the Hood
+
+### The end-to-end flow
+
+```
+User clicks "Run Demo Data"
+        │
+        ▼
+GET /api/demo ──────────────▶  FastAPI backend
+        │                          │
+        │              ┌───────────▼───────────┐
+        │              │ 1. Data Generator     │  ← 60 synthetic records in 3 CSVs
+        │              │    + ground_truth.json│     (every correct answer known)
+        │              └───────────┬───────────┘
+        │                          ▼
+        │              ┌───────────────────────┐
+        │              │ 2. Reconciliation     │
+        │              │    Engine             │
+        │              │   Tier 1 · Exact      │
+        │              │   Tier 2 · Fuzzy      │
+        │              │   Tier 3 · AI (LLM)   │
+        │              └───────────┬───────────┘
+        │                          ▼
+        │              ┌───────────────────────┐
+        │              │ 3. Evaluator          │  ← score against ground truth
+        │              │    accuracy · precision│
+        │              │    · recall · metrics  │
+        │              └───────────┬───────────┘
+        │                          ▼
+        │            { matches, exceptions, metrics }
+        ▼
+React dashboard animates results (anime.js)
+```
+
+### 1. Synthetic data generator — how the test set is built
+
+`backend/data/generator.py` creates 60 base transactions and writes **three CSVs** (Razorpay settlements, bank statements, orders) plus a `ground_truth.json` that records the *correct* result for every settlement. This gives us a **known answer key** to score against.
+
+It deliberately injects **5 fault types** so the engine is genuinely tested:
+
+| Fault type | What's injected | Why it's hard |
+|---|---|---|
+| `exact` | All fields agree | Trivial — Tier 1 handles it |
+| `fee` | Settled amount = gross − fee (₹<2.50 gap) | Amounts differ, but the gap is explainable |
+| `tplus1` | Bank/razorpay date = order date + 1 day | Date mismatch, needs window logic |
+| `ref_diff` | Reference IDs differ in case/format (`ORD` vs `OR`) | IDs not identical, needs fuzzy similarity |
+| `orphan` | Settlement exists but no bank credit | Genuine exception — must be surfaced, not force-matched |
+
+### 2. The three-tier matching engine — `reconciler/engine.py`
+
+Each Razorpay settlement is matched to a bank credit. The engine escalates only when it has to:
+
+**Tier 1 — Exact match (instant, deterministic)**
+- Settlement reference equals bank credit's `settlement_ref`
+- Amount identical (≤ ₹0.005)
+- Date identical
+- Confidence = **1.0**
+
+**Tier 2 — Fuzzy match (instant, deterministic)**
+Applies tolerance when IDs aren't byte-identical:
+- Amount difference **≤ ₹1.00** (absorbs rounding)
+- Date difference **≤ 1 day** (covers T+1 settlement lag)
+- Reference similarity **≥ 0.80** (Levenshtein-style via `difflib`)
+- Confidence = 0.85–0.95 (scaled by reference similarity)
+
+**Tier 3 — AI match (LLM, only on leftovers)**
+Records that pass neither tier are handed to the LLM. The prompt frames it from the mindset of a payments analyst:
+> *"You are a senior payments reconciliation analyst… settlements may land T+1… Razorpay takes a fee… references may differ in case/format… Return JSON decisions."*
+
+The LLM reasons about **fee gaps**, **ambiguous near-matches**, and **true orphans**, returning `{ bank_id | null, confidence, reason }` for each. It's only called when rules can't resolve, so it never overrides a deterministic answer.
+
+> **No API key?** The `RuleBasedJudge` fallback reproduces the expected conclusions (fee gaps, date windows, ref differences) so the demo runs **fully offline** with identical output.
+
+### 3. Evaluator — `reconciler/evaluator.py`
+
+Scores the engine's output against `ground_truth.json` and reports:
+- **True accuracy** — % of settlements correctly classified (matched to the right bank, or correctly flagged as exceptions)
+- **Per-fault-type accuracy** — how the engine did on `exact` vs `fee` vs `orphan`, etc.
+- **Exception precision** — of the exceptions the engine *reported*, how many were real
+- **Exception recall** — of the *true* exceptions in the data, how many it caught
+
+### 4. Backend API — `backend/main.py`
+
+| Endpoint | Flow |
+|---|---|
+| `GET /api/health` | Liveness check |
+| `GET /api/demo?use_llm=` | Generate data → reconcile → score → return metrics + sample rows |
+| `POST /api/reconcile` | Parse 3 uploaded CSVs → reconcile → return full result |
+
+### 5. Frontend — how it talks to the backend
+
+Built with **React 19 + Vite + Tailwind CSS v4**, styled with a **Watermelon UI**-inspired fintech design system and brought to life with **anime.js**:
+
+- **API client** (`src/lib/api.ts`) — `fetch` wrappers for health/demo/reconcile
+- **Dev proxy** — Vite forwards `/api` → `http://localhost:8000`, so the browser uses one origin
+- **Animated UX** (`src/lib/anim.ts`) — `introReveal` (header fade), `countUp` (metric numbers), `resultTimeline` (staggered section reveal), `flashRows` (table update highlight), ambient background `animate` loops
+- **Components** — `MetricCard` (icon + count-up + trend), `Charts` (Recharts area + donut), `MatchTable` / `ExceptionTable` (status badges), `UploadCard` (drag-and-drop dropzones)
+
+### 6. The data dictionary
+
+| Field | Source | Meaning |
+|---|---|---|
+| `settlement_id` | Razorpay | Unique settlement reference (`STL…`) |
+| `order_ref` | Razorpay | Links settlement → order (`ORD…`) |
+| `settlement_ref` | Bank | Bank's copy of the settlement id — **the key linker** |
+| `order_id` | Orders | Unique order reference (`ORD…`) |
+| `amount` | all | Net settled amount (Razorpay & bank); gross collected (orders) |
+| `date` | all | Transaction date |
+| `fees` / `gst` | Razorpay | Fee + 18% GST deducted between gross and net |
 
 ---
 ## 🚀 Quick Start
