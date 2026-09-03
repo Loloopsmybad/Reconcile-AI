@@ -1,4 +1,4 @@
-import { Scale, ArrowUpRight } from 'lucide-react'
+import { Scale, ArrowUpRight, ExternalLink } from 'lucide-react'
 
 export default function Footer() {
   return (
@@ -19,13 +19,16 @@ export default function Footer() {
               <p className="max-w-[320px] text-[15px] leading-relaxed text-zinc-500">
                 Settlement reconciliation for Razorpay merchants — automated
                 matching, measured accuracy, and honest exception reporting.
+                Built for the AI Finance Controller track.
               </p>
               <a
-                href="mailto:team@reconcile-ai.dev"
+                href="https://razorpay.com/buildathon/"
+                target="_blank"
+                rel="noopener noreferrer"
                 className="group inline-flex items-center gap-2 text-[15px] text-zinc-300 hover:text-white transition-colors"
               >
-                team@reconcile-ai.dev
-                <ArrowUpRight className="size-4 text-zinc-500 group-hover:text-white transition-colors" />
+                razorpay.com/buildathon
+                <ExternalLink className="size-3.5 text-zinc-500 group-hover:text-white transition-colors" />
               </a>
             </div>
 
@@ -43,16 +46,31 @@ export default function Footer() {
               <div className="flex flex-col gap-6">
                 <h4 className="font-medium text-zinc-100">Resources</h4>
                 <ul className="flex flex-col gap-3 text-[15px]">
-                  <li><a href="https://razorpay.com/buildathon/" target="_blank" rel="noopener noreferrer" className="hover:text-zinc-100 transition-colors">Razorpay Buildathon</a></li>
-                  <li><a href="https://github.com/Loloopsmybad/Reconcile-AI" target="_blank" rel="noopener noreferrer" className="hover:text-zinc-100 transition-colors">GitHub</a></li>
+                  <li>
+                    <a href="https://razorpay.com/buildathon/" target="_blank" rel="noopener noreferrer" className="hover:text-zinc-100 transition-colors inline-flex items-center gap-1.5">
+                      Buildathon <ExternalLink className="size-3" />
+                    </a>
+                  </li>
+                  <li>
+                    <a href="https://github.com/Loloopsmybad/Reconcile-AI" target="_blank" rel="noopener noreferrer" className="hover:text-zinc-100 transition-colors inline-flex items-center gap-1.5">
+                      GitHub <ExternalLink className="size-3.5" />
+                    </a>
+                  </li>
                   <li><a href="#" className="hover:text-zinc-100 transition-colors">API Docs</a></li>
+                  <li><a href="#" className="hover:text-zinc-100 transition-colors">Data Schema</a></li>
                 </ul>
               </div>
               <div className="flex flex-col gap-6">
-                <h4 className="font-medium text-zinc-100">Legal</h4>
+                <h4 className="font-medium text-zinc-100">Track</h4>
                 <ul className="flex flex-col gap-3 text-[15px]">
-                  <li><a href="#" className="hover:text-zinc-100 transition-colors">Privacy</a></li>
-                  <li><a href="#" className="hover:text-zinc-100 transition-colors">Terms</a></li>
+                  <li><span className="text-zinc-100 font-medium">Track 4</span></li>
+                  <li><span className="text-zinc-400">AI Finance Controller</span></li>
+                  <li><span className="text-zinc-400">Settlement Q&A Agent</span></li>
+                  <li>
+                    <a href="https://razorpay.com/buildathon/" target="_blank" rel="noopener noreferrer" className="hover:text-zinc-100 transition-colors inline-flex items-center gap-1.5">
+                      Apply <ArrowUpRight className="size-3" />
+                    </a>
+                  </li>
                 </ul>
               </div>
             </div>
@@ -91,7 +109,11 @@ export default function Footer() {
           {/* Bottom bar */}
           <div className="flex flex-col items-center justify-between gap-4 border-t border-white/[0.06] py-6 text-xs text-zinc-600 sm:flex-row">
             <span>© 2026 Reconcile-AI. Built for Razorpay AI Buildathon.</span>
-            <span>Track 4 · AI Finance Controller</span>
+            <div className="flex items-center gap-4">
+              <span>Track 4 · AI Finance Controller</span>
+              <span className="text-zinc-700">•</span>
+              <span>60 transactions · 100% accuracy</span>
+            </div>
           </div>
         </div>
       </div>
