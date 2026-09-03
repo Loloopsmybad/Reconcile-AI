@@ -371,6 +371,4 @@ reconcile-ai/
 
 **Built for the Razorpay AI Buildathon · Track 4 — AI Finance Controller**
 
-*Hand-crafted with ❤️ by the Reconcile-AI team*
-
 </div>
