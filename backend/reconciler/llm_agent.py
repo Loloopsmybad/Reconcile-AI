@@ -4,9 +4,8 @@ The rules engine resolves the easy matches deterministically. This module
 handles the genuinely ambiguous records - the exceptions - by asking an LLM
 to reason about whether two records represent the same underlying transaction.
 
-It supports pluggable providers (OpenAI by default, with a rule-based
-fallback so the demo still works without an API key). Structured output is
-used when the provider supports it, otherwise JSON mode or parsing.
+Uses OpenRouter (free tier) with pluggable models. Falls back to a
+rule-based judge when no API key is configured.
 """
 
 from __future__ import annotations
@@ -14,6 +13,7 @@ from __future__ import annotations
 import json
 import os
 import re
+from pathlib import Path
 
 from .models import (
     FieldDiff,
@@ -22,6 +22,8 @@ from .models import (
     SourceRecord,
     UnmatchedRecord,
 )
+
+API_KEY_FILE = Path.home() / "api_key.txt"
 
 
 class RuleBasedJudge:
@@ -86,18 +88,34 @@ class RuleBasedJudge:
 
 
 class LLMJudge:
-    """LLM-backed judge using an OpenAI-compatible chat completions endpoint."""
+    """LLM-backed judge using OpenRouter's OpenAI-compatible API."""
 
     def __init__(
         self,
         api_key: str | None = None,
-        model: str = "gemini-2.0-flash",
+        model: str | None = None,
         base_url: str | None = None,
     ):
-        self.api_key = api_key or os.getenv("GEMINI_API_KEY") or os.getenv("OPENAI_API_KEY")
-        self.model = model
-        self.base_url = base_url or os.getenv("LLM_BASE_URL") or "https://generativelanguage.googleapis.com"
+        self.api_key = api_key or self._load_api_key()
+        self.model = model or "nvidia/nemotron-3.5-lightning:free"
+        self.base_url = (base_url or os.getenv("LLM_BASE_URL") or "https://openrouter.ai/api/v1").rstrip("/")
         self._fallback = RuleBasedJudge()
+
+    @staticmethod
+    def _load_api_key() -> str | None:
+        """Load API key from file or environment."""
+        # 1. Environment variable
+        key = os.getenv("OPENROUTER_API_KEY") or os.getenv("OPENAI_API_KEY")
+        if key:
+            return key
+        # 2. File
+        if API_KEY_FILE.exists():
+            text = API_KEY_FILE.read_text(encoding="utf-8").strip()
+            for line in text.splitlines():
+                line = line.strip()
+                if line.startswith("sk-"):
+                    return line
+        return None
 
     def resolve(
         self,
@@ -112,31 +130,32 @@ class LLMJudge:
             import urllib.request
 
             candidate_max = 6
+            prompt = self._build_prompt(razorpay, bank[:candidate_max])
+
             payload = {
-                "contents": [{
-                    "role": "user",
-                    "parts": [{
-                        "text": self._build_prompt(razorpay, bank[:candidate_max])
-                    }],
-                }],
-                "generationConfig": {
-                    "temperature": 0.0,
-                    "responseMimeType": "application/json",
-                },
+                "model": self.model,
+                "messages": [
+                    {"role": "user", "content": prompt},
+                ],
+                "temperature": 0.0,
             }
-            url = (
-                f"https://generativelanguage.googleapis.com/v1beta/models/"
-                f"{self.model}:generateContent?key={self.api_key}"
-            )
+
+            url = f"{self.base_url}/chat/completions"
             req = urllib.request.Request(
                 url,
                 data=json.dumps(payload).encode("utf-8"),
-                headers={"Content-Type": "application/json"},
+                headers={
+                    "Content-Type": "application/json",
+                    "Authorization": f"Bearer {self.api_key}",
+                    "HTTP-Referer": "https://reconcile-ai.buildathon.dev",
+                    "X-Title": "Reconcile-AI",
+                },
             )
-            with urllib.request.urlopen(req, timeout=45) as resp:
+            with urllib.request.urlopen(req, timeout=60) as resp:
                 body = json.loads(resp.read().decode("utf-8"))
             return self._parse_response(body, razorpay, bank)
-        except Exception:
+        except Exception as e:
+            print(f"[LLMJudge] OpenRouter call failed: {e}")
             return self._fallback.resolve(razorpay, bank, orders)
 
     # -- prompt building -----------------------------------------------------
@@ -149,8 +168,7 @@ class LLMJudge:
             f"- {b.id} | amt {chr(8377)}{b.amount:.2f} | {b.date} | ref {b.ref}"
             for b in bank
         )
-        return f"""
-You are a senior payments reconciliation analyst at a fintech company.
+        return f"""You are a senior payments reconciliation analyst at a fintech company.
 
 You have Razorpay settlement records that did NOT match automatically to a
 bank credit. For each, decide whether it corresponds to any bank record, or
@@ -187,8 +205,7 @@ If confidence < 0.6 or no bank matches, set bank_id to null and use reason_code 
 Use "FEE_DIFF" when a small fee gap explains the amount difference.
 Use "TPLUS1" when the date is off by one day but amounts match.
 Use "REF_DIFF" when amounts and dates match but references differ.
-Use "FUZZY_MATCH" for other partial matches.
-""".strip()
+Use "FUZZY_MATCH" for other partial matches.""".strip()
 
     def _parse_response(
         self,
@@ -198,7 +215,8 @@ Use "FUZZY_MATCH" for other partial matches.
     ) -> LLMResolution:
         result = LLMResolution()
         try:
-            text = body["candidates"][0]["content"]["parts"][0]["text"]
+            # OpenAI / OpenRouter response format
+            text = body["choices"][0]["message"]["content"]
             text = re.sub(r"```(?:json)?", "", text).strip("` \n")
             data = json.loads(text)
             decisions = data.get("decisions", [])
@@ -274,7 +292,7 @@ def _compute_field_diffs(rp: SourceRecord, bank: SourceRecord) -> list[FieldDiff
 
 def get_llm_judge(api_key: str | None = None) -> "LLMJudge | RuleBasedJudge":
     """Factory returning the best available judge for the current environment."""
-    key = api_key or os.getenv("GEMINI_API_KEY") or os.getenv("OPENAI_API_KEY")
-    if key:
-        return LLMJudge(api_key=key)
+    judge = LLMJudge(api_key=api_key, model="nvidia/nemotron-3.5-lightning:free")
+    if judge.api_key:
+        return judge
     return RuleBasedJudge()

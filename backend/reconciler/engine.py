@@ -161,10 +161,10 @@ class ReconciliationEngine:
             "matched_count": len(matched),
             "unmatched_count": len(unmatched),
             "match_rate": round(match_rate, 4),
-            "matches": [m.__dict__ for m in matched],
-            "unmatched": [u.__dict__ for u in unmatched],
+            "matches": [_dc(m) for m in matched],
+            "unmatched": [_dc(u) for u in unmatched],
             "one_to_many": [_otm_to_dict(o) for o in one_to_many],
-            "anomalies": [a.__dict__ for a in anomalies],
+            "anomalies": [_dc(a) for a in anomalies],
             "corrections_applied": corrections_applied,
         }
 
@@ -456,6 +456,15 @@ class ReconciliationEngine:
     @staticmethod
     def _ref_similarity(s1: str, s2: str) -> float:
         return difflib.SequenceMatcher(None, s1, s2).ratio()
+
+
+def _dc(obj):
+    """Recursively convert a dataclass (or nested list of dataclasses) to a plain dict."""
+    if hasattr(obj, "__dataclass_fields__"):
+        return {k: _dc(v) for k, v in obj.__dict__.items()}
+    if isinstance(obj, list):
+        return [_dc(i) for i in obj]
+    return obj
 
 
 def _otm_to_dict(o: OneToManyMatch) -> dict:

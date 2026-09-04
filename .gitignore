@@ -16,3 +16,8 @@ data/synthetic/
 
 # OS
 .DS_Store
+
+# Secrets
+api_key.txt
+api_key
+*.key
