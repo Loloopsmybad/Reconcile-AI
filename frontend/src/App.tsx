@@ -134,7 +134,7 @@ function App() {
   }
 
   return (
-    <div className="relative min-h-screen overflow-x-hidden">
+    <div className="relative min-h-screen overflow-x-clip">
       <CursorGlow />
       <div className="pointer-events-none fixed inset-0 -z-10 bg-grid">
         <div className="bg-blob absolute -left-32 top-0 h-[480px] w-[480px] rounded-full bg-violet-600/15 blur-3xl" />
