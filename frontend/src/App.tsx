@@ -65,7 +65,8 @@ function App() {
   }, [result])
 
   const handleRunDemo = async () => {
-    document.getElementById('demo-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    const el = document.getElementById('demo-section')
+    if (el) window.scrollTo({ top: el.offsetTop - 20, behavior: 'smooth' })
     setLoading(true)
     setStreamProgress({ phase: 'starting', progress: 0, message: 'Initializing…' })
     try {

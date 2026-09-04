@@ -68,18 +68,24 @@ export default function Hero({ onRunDemo, loading, datasetSize, onSizeChange }: 
             {loading ? 'Reconciling…' : 'Run Demo'}
             {!loading && <ArrowRight className="size-4" />}
           </button>
-          <button
-            onClick={() => document.getElementById('demo-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
+          <a
+            href="#demo-section"
+            onClick={(e) => {
+              e.preventDefault()
+              const el = document.getElementById('demo-section')
+              if (el) window.scrollTo({ top: el.offsetTop - 20, behavior: 'smooth' })
+            }}
             className="inline-flex items-center gap-2 rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-6 py-3 text-sm font-medium text-emerald-300 transition hover:bg-emerald-500/20"
           >
             <Zap className="size-4 text-emerald-400" />
             Try Now
-          </button>
+          </a>
           <a
             href="#how-it-works"
             onClick={(e) => {
               e.preventDefault()
-              document.getElementById('how-it-works')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+              const el = document.getElementById('how-it-works')
+              if (el) window.scrollTo({ top: el.offsetTop - 20, behavior: 'smooth' })
             }}
             className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-6 py-3 text-sm font-medium text-zinc-200 transition hover:bg-white/10"
           >
