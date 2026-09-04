@@ -66,6 +66,8 @@ export interface DemoResult {
   anomalies?: Anomaly[]
   total_one_to_many?: number
   total_anomalies?: number
+  elapsed_seconds?: number
+  dataset_size?: number
 }
 
 export interface ReconcileResult {

@@ -58,8 +58,12 @@ class ReconciliationEngine:
         razorpay_records: list[SourceRecord],
         bank_records: list[SourceRecord],
         order_records: list[SourceRecord],
+        progress_cb=None,
     ) -> dict:
-        """Run all three tiers and return a full reconciliation result."""
+        """Run all three tiers and return a full reconciliation result.
+
+        progress_cb: optional callable(phase: str, progress: int, message: str)
+        """
         matched: list[MatchCandidate] = []
         unmatched: list[UnmatchedRecord] = []
         one_to_many: list[OneToManyMatch] = []
@@ -72,6 +76,8 @@ class ReconciliationEngine:
         order_by_id = {r.id: r for r in order_records}
 
         # ---- Self-learning: apply previously recorded corrections ----
+        if progress_cb:
+            progress_cb("learning", 5, f"Applying {len(CORRECTIONS)} self-learning corrections…")
         corrections_applied = 0
         for rp in list(razorpay_records):
             correction = self._find_correction(rp.id)
@@ -95,6 +101,8 @@ class ReconciliationEngine:
                     corrections_applied += 1
 
         # ---- Tiers 1 & 2: deterministic rule matching ---------------------
+        if progress_cb:
+            progress_cb("tier12", 15, f"Running Tier 1+2 exact & fuzzy matching on {len(razorpay_records)} records…")
         for rp in razorpay_records:
             if any(m.razorpay_id == rp.id for m in matched):
                 continue
@@ -134,10 +142,14 @@ class ReconciliationEngine:
         remaining_bank = [r for r in bank_records if r.id not in used_bank]
 
         # ---- Tier 3: LLM resolves the remaining unmatched settlements -----
+        print(f"[Engine] Tier 1+2 matched: {len(matched)}/{len(razorpay_records)} | Remaining for AI: {len(remaining_rp)}")
+        if progress_cb:
+            progress_cb("tier3", 70, f"Tier 1+2 matched {len(matched)}/{len(razorpay_records)} — sending {len(remaining_rp)} to AI…")
         if self.use_llm and self._llm:
             resolution = self._llm.resolve(remaining_rp, remaining_bank, order_records)
             matched.extend(resolution.matches)
             unmatched.extend(resolution.unmatched)
+            print(f"[Engine] Tier 3 (AI) matched: {len(resolution.matches)} | exceptions: {len(resolution.unmatched)}")
         else:
             for r in remaining_rp:
                 unmatched.append(UnmatchedRecord(
@@ -151,6 +163,8 @@ class ReconciliationEngine:
                 ))
 
         # ---- Anomaly detection ---------------------------------------------
+        if progress_cb:
+            progress_cb("anomalies", 90, "Running anomaly detection…")
         all_records = {"razorpay": razorpay_records, "bank": bank_records, "order": order_records}
         anomalies = self._detect_anomalies(matched, unmatched, all_records)
 
@@ -167,6 +181,8 @@ class ReconciliationEngine:
             "anomalies": [_dc(a) for a in anomalies],
             "corrections_applied": corrections_applied,
         }
+        if progress_cb:
+            progress_cb("complete", 100, f"Done — {len(matched)} matched, {len(unmatched)} exceptions, {len(anomalies)} anomalies")
 
     # -- match helpers --------------------------------------------------------
     def _find_bank_match(self, rp, bank_pool, bank_by_ref, used):

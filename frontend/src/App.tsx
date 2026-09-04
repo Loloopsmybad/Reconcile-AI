@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { animate } from 'animejs'
-import { Zap, ShieldCheck, Flame, Scale, GitBranch, AlertTriangle } from 'lucide-react'
+import { Zap, ShieldCheck, Flame, Scale, GitBranch, AlertTriangle, Download, Clock, Database } from 'lucide-react'
 import Hero from './components/Hero'
 import FeatureSection from './components/FeatureSection'
 import BentoGrid from './components/BentoGrid'
@@ -12,9 +12,10 @@ import { UploadCard } from './components/UploadCard'
 import { MatchTable } from './components/MatchTable'
 import { ExceptionTable } from './components/ExceptionTable'
 import { Charts } from './components/Charts'
+import { QueryChat } from './components/QueryChat'
 import Footer from './components/Footer'
 import { introReveal, resultTimeline } from './lib/anim'
-import { runDemo, reconcile } from './lib/api'
+import { runDemoStream, reconcile, downloadReport } from './lib/api'
 import type { Match, Unmatched, Metrics, OneToManyMatch, Anomaly } from './lib/types'
 
 interface ResultState {
@@ -24,11 +25,21 @@ interface ResultState {
   rate: number
   oneToMany: OneToManyMatch[]
   anomalies: Anomaly[]
+  elapsed?: number
+  datasetSize?: number
+}
+
+interface StreamProgress {
+  phase: string
+  progress: number
+  message: string
 }
 
 function App() {
   const [loading, setLoading] = useState(false)
   const [result, setResult] = useState<ResultState | null>(null)
+  const [streamProgress, setStreamProgress] = useState<StreamProgress | null>(null)
+  const [datasetSize, setDatasetSize] = useState(60)
   const [files, setFiles] = useState<{ razorpay: File | null; bank: File | null; orders: File | null }>({
     razorpay: null,
     bank: null,
@@ -53,21 +64,38 @@ function App() {
 
   const handleRunDemo = async () => {
     setLoading(true)
+    setStreamProgress({ phase: 'starting', progress: 0, message: 'Initializing…' })
     try {
-      const data = await runDemo(true)
-      setResult({
-        matches: data.sample_matches,
-        exceptions: data.sample_unmatched,
-        metrics: data.metrics,
-        rate: Math.round((data.metrics.true_accuracy ?? 1) * 100),
-        oneToMany: data.one_to_many ?? [],
-        anomalies: data.anomalies ?? [],
-      })
-      setTimeout(() => {
-        document.getElementById('demo')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-      }, 400)
+      await runDemoStream(
+        true,
+        datasetSize,
+        (phase, progress, message) => {
+          setStreamProgress({ phase, progress, message })
+        },
+        (data) => {
+          setResult({
+            matches: data.sample_matches,
+            exceptions: data.sample_unmatched,
+            metrics: data.metrics,
+            rate: Math.round((data.metrics.true_accuracy ?? 1) * 100),
+            oneToMany: data.one_to_many ?? [],
+            anomalies: data.anomalies ?? [],
+            elapsed: data.elapsed_seconds,
+            datasetSize: data.dataset_size,
+          })
+          setStreamProgress(null)
+          setTimeout(() => {
+            document.getElementById('demo')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+          }, 400)
+        },
+        (err) => {
+          console.error(err)
+          setStreamProgress(null)
+        },
+      )
     } catch (e) {
       console.error(e)
+      setStreamProgress(null)
     } finally {
       setLoading(false)
     }
@@ -96,28 +124,20 @@ function App() {
   return (
     <div className="relative min-h-screen overflow-x-hidden">
       <CursorGlow />
-      {/* Ambient background */}
       <div className="pointer-events-none fixed inset-0 -z-10 bg-grid">
         <div className="bg-blob absolute -left-32 top-0 h-[480px] w-[480px] rounded-full bg-violet-600/15 blur-3xl" />
         <div className="bg-blob absolute -right-32 top-40 h-[440px] w-[440px] rounded-full bg-indigo-600/10 blur-3xl" />
         <div className="bg-blob absolute bottom-0 left-1/3 h-[380px] w-[500px] rounded-full bg-fuchsia-600/5 blur-3xl" />
       </div>
 
-      {/* 1. Hero */}
-      <Hero onRunDemo={handleRunDemo} loading={loading} />
+      <Hero onRunDemo={handleRunDemo} loading={loading} datasetSize={datasetSize} onSizeChange={setDatasetSize} />
 
-      {/* 2. Feature Section */}
       <div id="features">
         <FeatureSection />
       </div>
 
-      {/* 3. Bento Grid */}
       <BentoGrid />
-
-      {/* 4. Why It Matters */}
       <WhyItMatters />
-
-      {/* 5. Before vs After */}
       <BeforeAfter />
 
       {/* 6. How It Works */}
@@ -171,7 +191,25 @@ function App() {
             <UploadCard onFiles={setFiles} onRun={handleRunUpload} loading={loading} />
           </div>
 
-          {loading && (
+          {/* Streaming progress */}
+          {loading && streamProgress && (
+            <div className="mb-8 rounded-xl border border-violet-500/20 bg-violet-500/5 p-6">
+              <div className="mb-4 flex items-center gap-3">
+                <div className="h-5 w-5 animate-spin rounded-full border-2 border-violet-500 border-t-transparent" />
+                <span className="text-sm font-medium text-violet-300">Reconciling {datasetSize} records…</span>
+              </div>
+              <div className="mb-3 h-2 w-full overflow-hidden rounded-full bg-white/10">
+                <div
+                  className="h-full rounded-full bg-gradient-to-r from-violet-500 to-indigo-500 transition-all duration-500 ease-out"
+                  style={{ width: `${streamProgress.progress}%` }}
+                />
+              </div>
+              <p className="text-xs text-zinc-400">{streamProgress.message}</p>
+            </div>
+          )}
+
+          {/* Legacy loading spinner */}
+          {loading && !streamProgress && (
             <div className="flex flex-col items-center py-16 text-zinc-300">
               <div className="mb-4 h-12 w-12 animate-spin rounded-full border-4 border-violet-500 border-t-transparent" />
               <p className="text-sm">Reconciling records across three sources…</p>
@@ -206,6 +244,31 @@ function App() {
                   tone="violet"
                   trendText="auto"
                 />
+              </div>
+
+              {/* Timing + download */}
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-4 text-xs text-zinc-500">
+                  {result.elapsed != null && (
+                    <span className="flex items-center gap-1.5">
+                      <Clock className="size-3.5 text-zinc-400" />
+                      {result.elapsed}s
+                    </span>
+                  )}
+                  {result.datasetSize != null && (
+                    <span className="flex items-center gap-1.5">
+                      <Database className="size-3.5 text-zinc-400" />
+                      {result.datasetSize} records
+                    </span>
+                  )}
+                </div>
+                <button
+                  onClick={downloadReport}
+                  className="inline-flex items-center gap-2 rounded-lg border border-white/10 bg-white/5 px-4 py-2 text-xs font-medium text-zinc-300 transition hover:bg-white/10"
+                >
+                  <Download className="size-3.5" />
+                  Download PDF Report
+                </button>
               </div>
 
               {/* Advanced metrics — 1:N + Anomalies */}
@@ -260,12 +323,14 @@ function App() {
               <Charts matches={result.matches} metrics={result.metrics} rate={result.rate} />
               <MatchTable matches={result.matches} />
               <ExceptionTable exceptions={result.exceptions} />
+
+              {/* AI Query */}
+              <QueryChat />
             </div>
           )}
         </div>
       </section>
 
-      {/* 8. Footer */}
       <Footer />
     </div>
   )

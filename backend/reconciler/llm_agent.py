@@ -124,13 +124,18 @@ class LLMJudge:
         orders: list[SourceRecord],
     ) -> LLMResolution:
         if not self.api_key:
+            print("[LLMJudge] No API key — falling back to RuleBasedJudge")
             return self._fallback.resolve(razorpay, bank, orders)
 
         try:
             import urllib.request
+            import time
 
             candidate_max = 6
             prompt = self._build_prompt(razorpay, bank[:candidate_max])
+
+            print(f"[LLMJudge] Calling OpenRouter — model={self.model}, unresolved={len(razorpay)}, bank_candidates={min(len(bank), candidate_max)}")
+            t0 = time.time()
 
             payload = {
                 "model": self.model,
@@ -153,6 +158,8 @@ class LLMJudge:
             )
             with urllib.request.urlopen(req, timeout=60) as resp:
                 body = json.loads(resp.read().decode("utf-8"))
+            elapsed = round(time.time() - t0, 2)
+            print(f"[LLMJudge] OpenRouter responded in {elapsed}s")
             return self._parse_response(body, razorpay, bank)
         except Exception as e:
             print(f"[LLMJudge] OpenRouter call failed: {e}")
