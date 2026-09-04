@@ -86,10 +86,19 @@ function App() {
             datasetSize: data.dataset_size,
           })
           setStreamProgress(null)
-          fetchAnalytics().then((d) => { if (d) setAnalytics(d) }).catch(console.error)
           setTimeout(() => {
-            document.getElementById('demo')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-          }, 400)
+            fetchAnalytics().then((d) => {
+              if (d) setAnalytics(d)
+              else {
+                setTimeout(() => {
+                  fetchAnalytics().then((d2) => { if (d2) setAnalytics(d2) }).catch(console.error)
+                }, 2000)
+              }
+            }).catch(console.error)
+          }, 1000)
+          setTimeout(() => {
+            document.getElementById('demo-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+          }, 600)
         },
         (err) => {
           console.error(err)
@@ -179,7 +188,7 @@ function App() {
       </section>
 
       {/* 7. Dashboard */}
-      <section id="demo" className="w-full py-20">
+      <section id="demo-section" className="w-full py-20">
         <div className="mx-auto max-w-7xl px-6">
           <div className="mb-10 text-center">
             <div className="intro-item mb-4 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-sm text-zinc-400">

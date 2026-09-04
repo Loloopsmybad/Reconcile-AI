@@ -89,8 +89,17 @@ export async function nlQuery(question: string): Promise<{ answer: string; resul
   return handle(res)
 }
 
-export function downloadReport() {
-  window.open(`${BASE}/api/report`, '_blank')
+export async function downloadReport() {
+  try {
+    const res = await fetch(`${BASE}/api/health`)
+    if (!res.ok) {
+      alert('Backend is not running. Please start the backend server.')
+      return
+    }
+    window.open(`${BASE}/api/report`, '_blank')
+  } catch {
+    alert('Cannot reach backend. Make sure uvicorn is running on port 8000.')
+  }
 }
 
 export async function fetchAnalytics(): Promise<AnalyticsData | null> {
