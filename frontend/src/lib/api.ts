@@ -93,7 +93,14 @@ export function downloadReport() {
   window.open(`${BASE}/api/report`, '_blank')
 }
 
-export async function fetchAnalytics(): Promise<AnalyticsData> {
-  const res = await fetch(`${BASE}/api/analytics`)
-  return handle<AnalyticsData>(res)
+export async function fetchAnalytics(): Promise<AnalyticsData | null> {
+  try {
+    const res = await fetch(`${BASE}/api/analytics`)
+    if (!res.ok) return null
+    const data = await res.json()
+    if (data?.status !== 'ok') return null
+    return data as AnalyticsData
+  } catch {
+    return null
+  }
 }

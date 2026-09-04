@@ -86,7 +86,7 @@ function App() {
             datasetSize: data.dataset_size,
           })
           setStreamProgress(null)
-          fetchAnalytics().then(setAnalytics).catch(console.error)
+          fetchAnalytics().then((d) => { if (d) setAnalytics(d) }).catch(console.error)
           setTimeout(() => {
             document.getElementById('demo')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
           }, 400)
@@ -117,7 +117,7 @@ function App() {
         oneToMany: [],
         anomalies: [],
       })
-      fetchAnalytics().then(setAnalytics).catch(console.error)
+      fetchAnalytics().then((d) => { if (d) setAnalytics(d) }).catch(console.error)
     } catch (e) {
       console.error(e)
     } finally {
