@@ -3,8 +3,10 @@ import { animate } from 'animejs'
 import { Zap, ShieldCheck, Flame, Scale } from 'lucide-react'
 import Hero from './components/Hero'
 import FeatureSection from './components/FeatureSection'
+import BentoGrid from './components/BentoGrid'
 import WhyItMatters from './components/WhyItMatters'
 import BeforeAfter from './components/BeforeAfter'
+import CursorGlow from './components/CursorGlow'
 import { MetricCard } from './components/MetricCard'
 import { UploadCard } from './components/UploadCard'
 import { MatchTable } from './components/MatchTable'
@@ -88,6 +90,7 @@ function App() {
 
   return (
     <div className="relative min-h-screen overflow-x-hidden">
+      <CursorGlow />
       {/* Ambient background */}
       <div className="pointer-events-none fixed inset-0 -z-10 bg-grid">
         <div className="bg-blob absolute -left-32 top-0 h-[480px] w-[480px] rounded-full bg-violet-600/15 blur-3xl" />
@@ -103,13 +106,16 @@ function App() {
         <FeatureSection />
       </div>
 
-      {/* 3. Why It Matters */}
+      {/* 3. Bento Grid */}
+      <BentoGrid />
+
+      {/* 4. Why It Matters */}
       <WhyItMatters />
 
-      {/* 4. Before vs After */}
+      {/* 5. Before vs After */}
       <BeforeAfter />
 
-      {/* 5. How It Works — Architecture section */}
+      {/* 6. How It Works — Architecture section */}
       <section id="how-it-works" className="w-full py-24">
         <div className="mx-auto max-w-6xl px-4">
           <div className="mb-12 text-center">
@@ -163,7 +169,7 @@ function App() {
         </div>
       </section>
 
-      {/* 6. Dashboard / Demo section */}
+      {/* 7. Dashboard / Demo section */}
       <section id="demo" className="w-full py-20">
         <div className="mx-auto max-w-7xl px-6">
           <div className="mb-10 text-center">
@@ -228,7 +234,7 @@ function App() {
         </div>
       </section>
 
-      {/* 7. Footer */}
+      {/* 8. Footer */}
       <Footer />
     </div>
   )
