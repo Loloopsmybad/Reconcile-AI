@@ -60,7 +60,11 @@ export default function Hero({ onRunDemo, loading }: HeroProps) {
           {!loading && <ArrowRight className="size-4" />}
         </button>
         <a
-          href="#features"
+          href="#how-it-works"
+          onClick={(e) => {
+            e.preventDefault()
+            document.getElementById('how-it-works')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+          }}
           className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-6 py-3 text-sm font-medium text-zinc-200 transition hover:bg-white/10"
         >
           <Zap className="size-4 text-amber-400" />

@@ -7,7 +7,6 @@ export default function CursorGlow() {
   const [hovering, setHovering] = useState(false)
 
   useEffect(() => {
-    // hide on mobile / touch
     if (window.matchMedia('(pointer: coarse)').matches) return
 
     let mouseX = 0, mouseY = 0
@@ -41,8 +40,8 @@ export default function CursorGlow() {
     const onEnter = () => setVisible(true)
 
     const tick = () => {
-      ringX += (mouseX - ringX) * 0.15
-      ringY += (mouseY - ringY) * 0.15
+      ringX += (mouseX - ringX) * 0.12
+      ringY += (mouseY - ringY) * 0.12
       if (ringRef.current) {
         ringRef.current.style.transform = `translate(${ringX}px, ${ringY}px)`
       }
@@ -68,7 +67,7 @@ export default function CursorGlow() {
 
   return (
     <>
-      {/* Small dot — follows cursor instantly */}
+      {/* Dot — follows cursor instantly */}
       <div
         ref={dotRef}
         className="pointer-events-none fixed top-0 left-0 z-[9999] -translate-x-1/2 -translate-y-1/2"
@@ -78,36 +77,47 @@ export default function CursorGlow() {
         }}
       >
         <div
-          className="rounded-full bg-white mix-blend-difference"
+          className="rounded-full"
           style={{
-            width: hovering ? 6 : 8,
-            height: hovering ? 6 : 8,
-            transition: 'width 0.3s ease, height 0.3s ease',
+            width: hovering ? 10 : 14,
+            height: hovering ? 10 : 14,
+            background: hovering
+              ? 'radial-gradient(circle, #a78bfa 0%, #7c3aed 100%)'
+              : 'radial-gradient(circle, #c4b5fd 0%, #8b5cf6 100%)',
+            boxShadow: hovering
+              ? '0 0 16px rgba(139, 92, 246, 0.6), 0 0 32px rgba(139, 92, 246, 0.3)'
+              : '0 0 10px rgba(139, 92, 246, 0.4)',
+            transition: 'width 0.3s ease, height 0.3s ease, background 0.3s ease, box-shadow 0.3s ease',
           }}
         />
       </div>
 
-      {/* Trailing ring — follows with delay */}
+      {/* Ring — follows with delay + inner fill */}
       <div
         ref={ringRef}
         className="pointer-events-none fixed top-0 left-0 z-[9998] -translate-x-1/2 -translate-y-1/2"
         style={{
           opacity: visible ? 1 : 0,
-          transition: 'opacity 0.3s ease, width 0.3s ease, height 0.3s ease, border-color 0.3s ease',
+          transition: 'opacity 0.3s ease, width 0.3s ease, height 0.3s ease',
         }}
       >
         <div
-          className="rounded-full border mix-blend-difference"
+          className="rounded-full"
           style={{
-            width: hovering ? 40 : 32,
-            height: hovering ? 40 : 32,
-            borderColor: hovering ? 'rgba(139, 92, 246, 0.8)' : 'rgba(255, 255, 255, 0.25)',
-            boxShadow: hovering ? '0 0 20px rgba(139, 92, 246, 0.3)' : 'none',
+            width: hovering ? 44 : 36,
+            height: hovering ? 44 : 36,
+            border: `1.5px solid ${hovering ? 'rgba(139, 92, 246, 0.7)' : 'rgba(196, 181, 253, 0.3)'}`,
+            background: hovering
+              ? 'radial-gradient(circle, rgba(139, 92, 246, 0.12) 0%, rgba(139, 92, 246, 0.04) 70%, transparent 100%)'
+              : 'radial-gradient(circle, rgba(139, 92, 246, 0.06) 0%, rgba(139, 92, 246, 0.02) 70%, transparent 100%)',
+            boxShadow: hovering
+              ? '0 0 24px rgba(139, 92, 246, 0.25), inset 0 0 12px rgba(139, 92, 246, 0.1)'
+              : '0 0 8px rgba(139, 92, 246, 0.08)',
+            transition: 'width 0.3s ease, height 0.3s ease, border-color 0.3s ease, background 0.3s ease, box-shadow 0.3s ease',
           }}
         />
       </div>
 
-      {/* Global style to hide default cursor */}
       <style>{`
         @media (pointer: fine) {
           *, *::before, *::after {
