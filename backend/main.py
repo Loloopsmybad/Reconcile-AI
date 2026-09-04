@@ -214,20 +214,39 @@ async def reconcile(
     bank: UploadFile = File(...),
     orders: UploadFile = File(...),
 ) -> JSONResponse:
-    global LATEST_RESULT, LATEST_METRICS, LATEST_ORDER_ROWS, LATEST_ANOMALIES, LATEST_ONE_TO_MANY
+    global LATEST_RESULT, LATEST_METRICS, LATEST_ORDER_ROWS, LATEST_ANOMALIES, LATEST_ONE_TO_MANY, LATEST_ELAPSED
     rp_rows = _decode_csv(await razorpay.read())
     bank_rows = _decode_csv(await bank.read())
     order_rows = _decode_csv(await orders.read())
 
+    t0 = time.time()
     engine = ReconciliationEngine(use_llm=True)
     result = engine.reconcile(
         _to_records(rp_rows, "razorpay", "settlement_id", "order_ref"),
         _to_records(bank_rows, "bank", "transaction_id", "settlement_ref"),
         _to_records(order_rows, "order", "order_id", "order_id"),
     )
+    elapsed = round(time.time() - t0, 2)
+
+    matches_count = len(result.get("matches", []))
+    unmatched_count = len(result.get("unmatched", []))
+    total = matches_count + unmatched_count
+    LATEST_METRICS = {
+        "total_transactions": total,
+        "total_matched": matches_count,
+        "reported_unmatched": unmatched_count,
+        "claim_match_rate": round(matches_count / total, 4) if total else 0,
+        "true_accuracy": 0,
+        "correct": 0,
+        "wrong": 0,
+        "per_fault_type": {},
+        "exception_precision": 0,
+        "exception_recall": 0,
+    }
 
     LATEST_RESULT = result
     LATEST_ORDER_ROWS = order_rows
+    LATEST_ELAPSED = elapsed
     LATEST_ANOMALIES.clear()
     LATEST_ANOMALIES.extend(result.get("anomalies", []))
     LATEST_ONE_TO_MANY.clear()
