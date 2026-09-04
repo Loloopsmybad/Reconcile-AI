@@ -73,6 +73,7 @@ class RuleBasedJudge:
                     explanation=best_reason,
                     field_diffs=field_diffs,
                     reason_code=best_reason_code,
+                    raw=rp.raw,
                 ))
             else:
                 result.unmatched.append(UnmatchedRecord(
@@ -83,6 +84,7 @@ class RuleBasedJudge:
                     reason="No matching bank credit; likely pending settlement or orphan.",
                     suggestion="Verify with Razorpay settlement API or wait for T+1.",
                     reason_code="ORPHAN",
+                    raw=rp.raw,
                 ))
         return result
 
@@ -257,6 +259,7 @@ Use "FUZZY_MATCH" for other partial matches.""".strip()
                         explanation=reason,
                         field_diffs=field_diffs,
                         reason_code=reason_code or "FUZZY_MATCH",
+                        raw=rp_rec.raw,
                     ))
                     continue
             result.unmatched.append(UnmatchedRecord(
@@ -267,6 +270,7 @@ Use "FUZZY_MATCH" for other partial matches.""".strip()
                 reason=reason or "No confident match.",
                 suggestion="Verify with settlement API or wait for settlement window.",
                 reason_code=reason_code or "ORPHAN",
+                raw=rp_by_id[rp_id].raw,
             ))
         return result
 

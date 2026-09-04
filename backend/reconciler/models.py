@@ -32,6 +32,7 @@ class MatchCandidate:
     explanation: str = ""
     field_diffs: list[FieldDiff] = field(default_factory=list)
     reason_code: str = ""        # e.g. "EXACT_MATCH", "FEE_DIFF", "TPLUS1", "REF_DIFF", "ORPHAN"
+    raw: dict = field(default_factory=dict)
 
 
 @dataclass
@@ -44,6 +45,7 @@ class UnmatchedRecord:
     suggestion: str | None = None
     field_diffs: list[FieldDiff] = field(default_factory=list)
     reason_code: str = ""
+    raw: dict = field(default_factory=dict)
 
 
 @dataclass

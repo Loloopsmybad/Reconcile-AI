@@ -96,6 +96,7 @@ class ReconciliationEngine:
                         explanation=f"Self-learning correction applied ({correction['correction_type']}).",
                         field_diffs=field_diffs,
                         reason_code="SELF_LEARNING",
+                        raw=rp.raw,
                     ))
                     used_bank.add(bank_hit_id)
                     corrections_applied += 1
@@ -124,6 +125,7 @@ class ReconciliationEngine:
                 explanation=bank_hit["explanation"],
                 field_diffs=field_diffs,
                 reason_code=reason_code,
+                raw=rp.raw,
             ))
 
         # ---- One-to-Many matching (batch payouts) --------------------------
@@ -160,6 +162,7 @@ class ReconciliationEngine:
                     reason="No matching bank credit found in exact/fuzzy tiers.",
                     suggestion="Possible pending settlement or orphan record.",
                     reason_code="ORPHAN",
+                    raw=r.raw,
                 ))
 
         # ---- Anomaly detection ---------------------------------------------
