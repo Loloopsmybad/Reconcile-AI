@@ -1,4 +1,4 @@
-import type { DemoResult, ReconcileResult } from './types'
+import type { DemoResult, ReconcileResult, AnalyticsData } from './types'
 
 const BASE = import.meta.env.VITE_API_URL ?? ''
 
@@ -91,4 +91,9 @@ export async function nlQuery(question: string): Promise<{ answer: string; resul
 
 export function downloadReport() {
   window.open(`${BASE}/api/report`, '_blank')
+}
+
+export async function fetchAnalytics(): Promise<AnalyticsData> {
+  const res = await fetch(`${BASE}/api/analytics`)
+  return handle<AnalyticsData>(res)
 }

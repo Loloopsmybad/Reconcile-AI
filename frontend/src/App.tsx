@@ -13,10 +13,11 @@ import { MatchTable } from './components/MatchTable'
 import { ExceptionTable } from './components/ExceptionTable'
 import { Charts } from './components/Charts'
 import { QueryChat } from './components/QueryChat'
+import { AnalyticsDashboard } from './components/AnalyticsDashboard'
 import Footer from './components/Footer'
 import { introReveal, resultTimeline } from './lib/anim'
-import { runDemoStream, reconcile, downloadReport } from './lib/api'
-import type { Match, Unmatched, Metrics, OneToManyMatch, Anomaly } from './lib/types'
+import { runDemoStream, reconcile, downloadReport, fetchAnalytics } from './lib/api'
+import type { Match, Unmatched, Metrics, OneToManyMatch, Anomaly, AnalyticsData } from './lib/types'
 
 interface ResultState {
   matches: Match[]
@@ -40,6 +41,7 @@ function App() {
   const [result, setResult] = useState<ResultState | null>(null)
   const [streamProgress, setStreamProgress] = useState<StreamProgress | null>(null)
   const [datasetSize, setDatasetSize] = useState(60)
+  const [analytics, setAnalytics] = useState<AnalyticsData | null>(null)
   const [files, setFiles] = useState<{ razorpay: File | null; bank: File | null; orders: File | null }>({
     razorpay: null,
     bank: null,
@@ -84,6 +86,7 @@ function App() {
             datasetSize: data.dataset_size,
           })
           setStreamProgress(null)
+          fetchAnalytics().then(setAnalytics).catch(console.error)
           setTimeout(() => {
             document.getElementById('demo')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
           }, 400)
@@ -114,6 +117,7 @@ function App() {
         oneToMany: [],
         anomalies: [],
       })
+      fetchAnalytics().then(setAnalytics).catch(console.error)
     } catch (e) {
       console.error(e)
     } finally {
@@ -321,6 +325,9 @@ function App() {
               )}
 
               <Charts matches={result.matches} metrics={result.metrics} rate={result.rate} />
+
+              {analytics && <AnalyticsDashboard data={analytics} />}
+
               <MatchTable matches={result.matches} />
               <ExceptionTable exceptions={result.exceptions} />
 

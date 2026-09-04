@@ -80,3 +80,122 @@ export interface ReconcileResult {
 }
 
 export type FaultType = 'exact' | 'fee' | 'tplus1' | 'orphan' | 'ref_diff'
+
+export interface FeeOverchargeDetail {
+  razorpay_id: string
+  merchant: string
+  payment_mode: string
+  order_amount: number
+  overcharge_amount: number
+  overcharge_pct: number
+}
+
+export interface DuplicateDetail {
+  settlement_ids: string[]
+  count: number
+  amount_each: number
+  total_amount: number
+  merchant: string
+  payment_mode: string
+  date: string
+}
+
+export interface OrphanDetail {
+  settlement_id: string
+  amount: number
+  merchant: string
+  payment_mode: string
+  date: string
+  reason: string
+}
+
+export interface RevenueLeakage {
+  currency: string
+  total_leakage: number
+  fee_overcharge: { count: number; total_amount: number; details: FeeOverchargeDetail[] }
+  duplicate_settlements: { count: number; total_amount: number; details: DuplicateDetail[] }
+  orphan_float: { count: number; total_amount: number; details: OrphanDetail[] }
+}
+
+export interface PaymentModeItem {
+  payment_mode: string
+  gross_volume: number
+  net_settled: number
+  total_fees: number
+  total_gst: number
+  effective_take_rate_pct: number
+  volume_share_pct: number
+  revenue_share_pct: number
+  transaction_count: number
+}
+
+export interface PaymentModeProfitability {
+  modes: PaymentModeItem[]
+  summary: {
+    highest_take_rate_mode: string
+    highest_volume_mode: string
+    most_profitable_mode: string
+  }
+}
+
+export interface VelocityHistogram {
+  bucket: string
+  count: number
+  pct: number
+}
+
+export interface DelayedSettlement {
+  settlement_id: string
+  order_id: string
+  delay_days: number
+  amount: number
+  merchant: string
+  payment_mode: string
+  order_date: string
+  settlement_date: string
+}
+
+export interface SettlementVelocity {
+  avg_days: number
+  median_days: number
+  max_days: number
+  delayed_count: number
+  delayed_rate_pct: number
+  total_with_order_date: number
+  histogram: VelocityHistogram[]
+  delayed_settlements: DelayedSettlement[]
+}
+
+export interface MerchantRiskItem {
+  merchant: string
+  composite_score: number
+  risk_level: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL'
+  breakdown: {
+    orphan_rate_pct: number
+    fee_discrepancy_rate_pct: number
+    outlier_count: number
+    avg_settlement_delay_days: number
+  }
+  total_records: number
+  total_unmatched: number
+}
+
+export interface MerchantRiskScores {
+  merchants: MerchantRiskItem[]
+  score_weights: Record<string, number>
+}
+
+export interface AnalyticsData {
+  status: string
+  dataset_summary: {
+    total_razorpay_records: number
+    total_matches: number
+    total_unmatched: number
+    total_anomalies: number
+    match_rate: number
+  }
+  revenue_leakage: RevenueLeakage
+  payment_mode_profitability: PaymentModeProfitability
+  settlement_velocity: SettlementVelocity
+  merchant_risk_scores: MerchantRiskScores
+}
