@@ -13,11 +13,10 @@ import { MatchTable } from './components/MatchTable'
 import { ExceptionTable } from './components/ExceptionTable'
 import { Charts } from './components/Charts'
 import { QueryChat } from './components/QueryChat'
-import { AnalyticsDashboard } from './components/AnalyticsDashboard'
 import Footer from './components/Footer'
 import { introReveal, resultTimeline } from './lib/anim'
-import { runDemoStream, reconcile, downloadReport, fetchAnalytics } from './lib/api'
-import type { Match, Unmatched, Metrics, OneToManyMatch, Anomaly, AnalyticsData } from './lib/types'
+import { runDemoStream, reconcile, downloadReport } from './lib/api'
+import type { Match, Unmatched, Metrics, OneToManyMatch, Anomaly } from './lib/types'
 
 interface ResultState {
   matches: Match[]
@@ -41,7 +40,6 @@ function App() {
   const [result, setResult] = useState<ResultState | null>(null)
   const [streamProgress, setStreamProgress] = useState<StreamProgress | null>(null)
   const [datasetSize, setDatasetSize] = useState(60)
-  const [analytics, setAnalytics] = useState<AnalyticsData | null>(null)
   const [files, setFiles] = useState<{ razorpay: File | null; bank: File | null; orders: File | null }>({
     razorpay: null,
     bank: null,
@@ -88,17 +86,6 @@ function App() {
             datasetSize: data.dataset_size,
           })
           setStreamProgress(null)
-          const tryFetchAnalytics = (attempt: number) => {
-            fetchAnalytics().then((d) => {
-              if (d) setAnalytics(d)
-              else if (attempt < 3) {
-                setTimeout(() => tryFetchAnalytics(attempt + 1), 2000 * (attempt + 1))
-              }
-            }).catch(() => {
-              if (attempt < 3) setTimeout(() => tryFetchAnalytics(attempt + 1), 2000 * (attempt + 1))
-            })
-          }
-          setTimeout(() => tryFetchAnalytics(0), 1500)
         },
         (err) => {
           console.error(err)
@@ -138,7 +125,6 @@ function App() {
         oneToMany: [],
         anomalies: [],
       })
-      fetchAnalytics().then((d) => { if (d) setAnalytics(d) }).catch(console.error)
     } catch (e) {
       clearInterval(progressTick)
       console.error(e)
@@ -350,8 +336,6 @@ function App() {
               )}
 
               <Charts matches={result.matches} metrics={result.metrics} rate={result.rate} />
-
-              {analytics && <AnalyticsDashboard data={analytics} />}
 
               <MatchTable matches={result.matches} />
               <ExceptionTable exceptions={result.exceptions} />
