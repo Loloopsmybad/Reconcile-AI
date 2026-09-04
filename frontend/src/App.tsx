@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { animate } from 'animejs'
-import { Zap, ShieldCheck, Flame, Scale } from 'lucide-react'
+import { Zap, ShieldCheck, Flame, Scale, GitBranch, AlertTriangle } from 'lucide-react'
 import Hero from './components/Hero'
 import FeatureSection from './components/FeatureSection'
 import BentoGrid from './components/BentoGrid'
@@ -15,13 +15,15 @@ import { Charts } from './components/Charts'
 import Footer from './components/Footer'
 import { introReveal, resultTimeline } from './lib/anim'
 import { runDemo, reconcile } from './lib/api'
-import type { Match, Unmatched, Metrics } from './lib/types'
+import type { Match, Unmatched, Metrics, OneToManyMatch, Anomaly } from './lib/types'
 
 interface ResultState {
   matches: Match[]
   exceptions: Unmatched[]
   metrics: Metrics | null
   rate: number
+  oneToMany: OneToManyMatch[]
+  anomalies: Anomaly[]
 }
 
 function App() {
@@ -58,8 +60,9 @@ function App() {
         exceptions: data.sample_unmatched,
         metrics: data.metrics,
         rate: Math.round((data.metrics.true_accuracy ?? 1) * 100),
+        oneToMany: data.one_to_many ?? [],
+        anomalies: data.anomalies ?? [],
       })
-      // Smooth scroll to dashboard after a beat
       setTimeout(() => {
         document.getElementById('demo')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
       }, 400)
@@ -80,6 +83,8 @@ function App() {
         exceptions: data.unmatched,
         metrics: null,
         rate: Math.round(data.match_rate * 100),
+        oneToMany: [],
+        anomalies: [],
       })
     } catch (e) {
       console.error(e)
@@ -115,7 +120,7 @@ function App() {
       {/* 5. Before vs After */}
       <BeforeAfter />
 
-      {/* 6. How It Works — Architecture section */}
+      {/* 6. How It Works */}
       <section id="how-it-works" className="w-full py-24">
         <div className="mx-auto max-w-6xl px-4">
           <div className="mb-12 text-center">
@@ -131,33 +136,13 @@ function App() {
               arbitrates the genuinely ambiguous — and only when explicitly enabled.
             </p>
           </div>
-
-          {/* Tier cards */}
           <div className="intro-item grid gap-6 md:grid-cols-3">
             {[
-              {
-                tier: 'Tier 1',
-                name: 'Exact Match',
-                desc: 'Settlement reference, amount, and date are all identical. Instant, deterministic, 100% confidence.',
-                color: 'violet',
-              },
-              {
-                tier: 'Tier 2',
-                name: 'Fuzzy Match',
-                desc: 'Amount within ₹1, date within 1 day, reference similarity ≥ 0.80. Catches T+1 lag and typos.',
-                color: 'sky',
-              },
-              {
-                tier: 'Tier 3',
-                name: 'AI Agent',
-                desc: 'LLM reasons about fee gaps, ambiguous near-matches, and true orphans. Structured JSON output.',
-                color: 'emerald',
-              },
+              { tier: 'Tier 1', name: 'Exact Match', desc: 'Settlement reference, amount, and date are all identical. Instant, deterministic, 100% confidence.', color: 'violet' },
+              { tier: 'Tier 2', name: 'Fuzzy Match', desc: 'Amount within ₹1, date within 1 day, reference similarity ≥ 0.80. Catches T+1 lag and typos.', color: 'sky' },
+              { tier: 'Tier 3', name: 'AI Agent', desc: 'LLM reasons about fee gaps, ambiguous near-matches, and true orphans. Structured JSON output.', color: 'emerald' },
             ].map((t) => (
-              <div
-                key={t.tier}
-                className="rounded-xl border border-white/10 bg-[#0f0f12] p-6"
-              >
+              <div key={t.tier} className="rounded-xl border border-white/10 bg-[#0f0f12] p-6">
                 <div className={`mb-3 inline-flex items-center gap-2 rounded-md bg-${t.color}-500/15 px-2 py-0.5 text-xs font-medium text-${t.color === 'violet' ? 'violet-300' : t.color === 'sky' ? 'sky-400' : 'emerald-400'}`}>
                   {t.tier}
                 </div>
@@ -169,7 +154,7 @@ function App() {
         </div>
       </section>
 
-      {/* 7. Dashboard / Demo section */}
+      {/* 7. Dashboard */}
       <section id="demo" className="w-full py-20">
         <div className="mx-auto max-w-7xl px-6">
           <div className="mb-10 text-center">
@@ -182,12 +167,10 @@ function App() {
             </h2>
           </div>
 
-          {/* Upload */}
           <div className="intro-item mb-8">
             <UploadCard onFiles={setFiles} onRun={handleRunUpload} loading={loading} />
           </div>
 
-          {/* Processing */}
           {loading && (
             <div className="flex flex-col items-center py-16 text-zinc-300">
               <div className="mb-4 h-12 w-12 animate-spin rounded-full border-4 border-violet-500 border-t-transparent" />
@@ -195,9 +178,9 @@ function App() {
             </div>
           )}
 
-          {/* Results */}
           {result && !loading && (
             <div className="space-y-5">
+              {/* Core metrics */}
               <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
                 <MetricCard
                   label="Transactions"
@@ -225,8 +208,56 @@ function App() {
                 />
               </div>
 
-              <Charts matches={result.matches} metrics={result.metrics} rate={result.rate} />
+              {/* Advanced metrics — 1:N + Anomalies */}
+              {(result.oneToMany.length > 0 || result.anomalies.length > 0) && (
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                  {result.oneToMany.length > 0 && (
+                    <div className="rounded-xl border border-sky-500/20 bg-sky-500/5 p-5">
+                      <div className="mb-3 flex items-center gap-2">
+                        <GitBranch className="size-4 text-sky-400" />
+                        <h3 className="text-sm font-semibold text-sky-300">One-to-Many Matches</h3>
+                        <span className="ml-auto rounded-md bg-sky-500/15 px-2 py-0.5 text-xs font-medium text-sky-400">
+                          {result.oneToMany.length}
+                        </span>
+                      </div>
+                      <div className="space-y-2">
+                        {result.oneToMany.slice(0, 3).map((m) => (
+                          <div key={m.razorpay_id} className="flex items-center gap-3 rounded-lg border border-white/5 bg-white/[0.03] px-3 py-2">
+                            <span className="text-xs text-zinc-500">{m.razorpay_id}</span>
+                            <span className="text-[10px] text-sky-400">→</span>
+                            <span className="text-xs text-zinc-400">{m.bank_ids.join(', ')}</span>
+                            <span className="ml-auto text-[10px] font-mono text-zinc-500">₹{m.total_bank_amount.toFixed(2)}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
 
+                  {result.anomalies.length > 0 && (
+                    <div className="rounded-xl border border-rose-500/20 bg-rose-500/5 p-5">
+                      <div className="mb-3 flex items-center gap-2">
+                        <AlertTriangle className="size-4 text-rose-400" />
+                        <h3 className="text-sm font-semibold text-rose-300">Anomalies Detected</h3>
+                        <span className="ml-auto rounded-md bg-rose-500/15 px-2 py-0.5 text-xs font-medium text-rose-400">
+                          {result.anomalies.length}
+                        </span>
+                      </div>
+                      <div className="space-y-2">
+                        {result.anomalies.slice(0, 3).map((a) => (
+                          <div key={a.id} className="flex items-center gap-3 rounded-lg border border-white/5 bg-white/[0.03] px-3 py-2">
+                            <span className={`text-[10px] font-medium ${a.severity === 'HIGH' ? 'text-rose-400' : a.severity === 'MEDIUM' ? 'text-amber-400' : 'text-zinc-400'}`}>
+                              {a.severity}
+                            </span>
+                            <span className="text-xs text-zinc-400 truncate">{a.description}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              <Charts matches={result.matches} metrics={result.metrics} rate={result.rate} />
               <MatchTable matches={result.matches} />
               <ExceptionTable exceptions={result.exceptions} />
             </div>

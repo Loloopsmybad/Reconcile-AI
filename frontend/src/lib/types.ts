@@ -1,3 +1,9 @@
+export interface FieldDiff {
+  field: string
+  source_value: string
+  bank_value: string
+}
+
 export interface Match {
   razorpay_id: string
   bank_id: string
@@ -5,6 +11,8 @@ export interface Match {
   confidence: number
   tier: number
   explanation: string
+  field_diffs?: FieldDiff[]
+  reason_code?: string
 }
 
 export interface Unmatched {
@@ -15,6 +23,26 @@ export interface Unmatched {
   date?: string
   reason: string
   suggestion?: string
+  field_diffs?: FieldDiff[]
+  reason_code?: string
+}
+
+export interface OneToManyMatch {
+  razorpay_id: string
+  bank_ids: string[]
+  total_bank_amount: number
+  confidence: number
+  tier: number
+  explanation: string
+  reason_code: string
+}
+
+export interface Anomaly {
+  id: string
+  kind: string
+  description: string
+  severity: string
+  related_records: string[]
 }
 
 export interface Metrics {
@@ -34,6 +62,10 @@ export interface DemoResult {
   metrics: Metrics
   sample_matches: Match[]
   sample_unmatched: Unmatched[]
+  one_to_many?: OneToManyMatch[]
+  anomalies?: Anomaly[]
+  total_one_to_many?: number
+  total_anomalies?: number
 }
 
 export interface ReconcileResult {
