@@ -86,18 +86,19 @@ function App() {
             datasetSize: data.dataset_size,
           })
           setStreamProgress(null)
-          setTimeout(() => {
+          const tryFetchAnalytics = (attempt: number) => {
             fetchAnalytics().then((d) => {
               if (d) setAnalytics(d)
-              else {
-                setTimeout(() => {
-                  fetchAnalytics().then((d2) => { if (d2) setAnalytics(d2) }).catch(console.error)
-                }, 2000)
+              else if (attempt < 3) {
+                setTimeout(() => tryFetchAnalytics(attempt + 1), 2000 * (attempt + 1))
               }
-            }).catch(console.error)
-          }, 1000)
+            }).catch(() => {
+              if (attempt < 3) setTimeout(() => tryFetchAnalytics(attempt + 1), 2000 * (attempt + 1))
+            })
+          }
+          setTimeout(() => tryFetchAnalytics(0), 1500)
           setTimeout(() => {
-            document.getElementById('demo-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+            document.getElementById('results')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
           }, 600)
         },
         (err) => {
@@ -230,7 +231,7 @@ function App() {
           )}
 
           {result && !loading && (
-            <div className="space-y-5">
+            <div id="results" className="space-y-5">
               {/* Core metrics */}
               <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
                 <MetricCard

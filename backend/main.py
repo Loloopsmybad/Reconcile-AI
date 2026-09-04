@@ -52,6 +52,7 @@ LATEST_RESULT: dict = {}
 LATEST_METRICS: dict = {}
 LATEST_GT: dict = {}
 LATEST_ORDER_ROWS: list[dict] = []
+LATEST_ELAPSED: float = 0.0
 
 
 class CorrectionRequest(BaseModel):
@@ -100,6 +101,7 @@ def demo(use_llm: bool = True, size: int = 60) -> dict:
         LATEST_METRICS = metrics
         LATEST_GT = gt
         LATEST_ORDER_ROWS = order_rows
+        LATEST_ELAPSED = elapsed
         LATEST_ANOMALIES.clear()
         LATEST_ANOMALIES.extend(result.get("anomalies", []))
         LATEST_ONE_TO_MANY.clear()
@@ -180,6 +182,7 @@ async def demo_stream(use_llm: bool = True, size: int = 60):
             LATEST_METRICS = metrics
             LATEST_GT = gt
             LATEST_ORDER_ROWS = order_rows
+            LATEST_ELAPSED = elapsed
             LATEST_ANOMALIES.clear()
             LATEST_ANOMALIES.extend(result.get("anomalies", []))
             LATEST_ONE_TO_MANY.clear()
@@ -295,107 +298,26 @@ def report():
     if not LATEST_RESULT:
         return JSONResponse(status_code=404, content={"error": "No reconciliation data. Run a demo first."})
 
-    from reportlab.lib.pagesizes import A4
-    from reportlab.lib import colors
-    from reportlab.lib.styles import getSampleStyleSheet
-    from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
-    from reportlab.lib.units import mm
+    from reconciler.pdf_report import build_pdf
+    from datetime import datetime
 
-    buf = io.BytesIO()
-    doc = SimpleDocTemplate(buf, pagesize=A4, topMargin=20 * mm, bottomMargin=20 * mm)
-    styles = getSampleStyleSheet()
-    elements = []
+    # Compute analytics inline for the report
+    analytics = None
+    try:
+        analytics_resp = get_analytics()
+        if isinstance(analytics_resp, dict) and analytics_resp.get("status") != "empty":
+            analytics = analytics_resp
+    except Exception:
+        pass
 
-    # Header
-    elements.append(Paragraph("Reconcile-AI — Settlement Reconciliation Report", styles["Title"]))
-    elements.append(Spacer(1, 6 * mm))
-
-    # Metrics
-    m = LATEST_METRICS
-    elements.append(Paragraph("Accuracy Summary", styles["Heading2"]))
-    metric_data = [
-        ["Metric", "Value"],
-        ["Total Transactions", str(m.get("total_transactions", 0))],
-        ["True Accuracy", f'{m.get("true_accuracy", 0) * 100:.1f}%'],
-        ["Correct", str(m.get("correct", 0))],
-        ["Wrong", str(m.get("wrong", 0))],
-        ["Exception Precision", f'{m.get("exception_precision", 0) * 100:.1f}%'],
-        ["Exception Recall", f'{m.get("exception_recall", 0) * 100:.1f}%'],
-    ]
-    t = Table(metric_data, colWidths=[140, 100])
-    t.setStyle(TableStyle([
-        ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#6d5cff")),
-        ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
-        ("FONTSIZE", (0, 0), (-1, -1), 9),
-        ("GRID", (0, 0), (-1, -1), 0.5, colors.grey),
-        ("ROWBACKGROUNDS", (0, 1), (-1, -1), [colors.white, colors.HexColor("#f5f5f5")]),
-    ]))
-    elements.append(t)
-    elements.append(Spacer(1, 6 * mm))
-
-    # Per fault type
-    per_fault = m.get("per_fault_type", {})
-    if per_fault:
-        elements.append(Paragraph("Per-Fault-Type Breakdown", styles["Heading2"]))
-        fault_data = [["Fault Type", "Total", "Correct", "Accuracy"]]
-        for ft, vals in per_fault.items():
-            fault_data.append([ft, str(vals.get("total", 0)), str(vals.get("correct", 0)), f'{vals.get("accuracy", 0) * 100:.0f}%'])
-        t2 = Table(fault_data, colWidths=[100, 60, 60, 80])
-        t2.setStyle(TableStyle([
-            ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#10b981")),
-            ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
-            ("FONTSIZE", (0, 0), (-1, -1), 9),
-            ("GRID", (0, 0), (-1, -1), 0.5, colors.grey),
-        ]))
-        elements.append(t2)
-        elements.append(Spacer(1, 6 * mm))
-
-    # Matched transactions
-    matches = LATEST_RESULT.get("matches", [])[:30]
-    if matches:
-        elements.append(Paragraph("Matched Transactions (top 30)", styles["Heading2"]))
-        match_data = [["Settlement", "Bank Txn", "Tier", "Confidence", "Reason"]]
-        for m_row in matches:
-            match_data.append([
-                m_row.get("razorpay_id", ""),
-                m_row.get("bank_id", ""),
-                f'T{m_row.get("tier", 0)}',
-                f'{m_row.get("confidence", 0) * 100:.0f}%',
-                m_row.get("reason_code", "")[:20],
-            ])
-        t3 = Table(match_data, colWidths=[85, 80, 35, 60, 80])
-        t3.setStyle(TableStyle([
-            ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#8b5cf6")),
-            ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
-            ("FONTSIZE", (0, 0), (-1, -1), 7),
-            ("GRID", (0, 0), (-1, -1), 0.3, colors.lightgrey),
-        ]))
-        elements.append(t3)
-        elements.append(Spacer(1, 6 * mm))
-
-    # Exceptions
-    unmatched = LATEST_RESULT.get("unmatched", [])
-    if unmatched:
-        elements.append(Paragraph("Exceptions", styles["Heading2"]))
-        exc_data = [["Record ID", "Amount", "Reason", "Suggestion"]]
-        for u in unmatched:
-            exc_data.append([
-                u.get("id", u.get("razorpay_id", "")),
-                f'₹{u.get("amount", 0):.2f}',
-                (u.get("reason", "")[:40]),
-                (u.get("suggestion", "")[:30]),
-            ])
-        t4 = Table(exc_data, colWidths=[80, 60, 150, 120])
-        t4.setStyle(TableStyle([
-            ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#f59e0b")),
-            ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
-            ("FONTSIZE", (0, 0), (-1, -1), 7),
-            ("GRID", (0, 0), (-1, -1), 0.3, colors.lightgrey),
-        ]))
-        elements.append(t4)
-
-    doc.build(elements)
-    buf.seek(0)
+    buf = build_pdf(
+        metrics=LATEST_METRICS,
+        matches=LATEST_RESULT.get("matches", [])[:40],
+        unmatched=LATEST_RESULT.get("unmatched", []),
+        anomalies=LATEST_RESULT.get("anomalies", []),
+        analytics=analytics,
+        elapsed=LATEST_ELAPSED,
+    )
     return StreamingResponse(
         buf,
         media_type="application/pdf",
