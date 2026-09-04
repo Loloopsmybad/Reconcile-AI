@@ -39,7 +39,7 @@ def _styles():
     ss = getSampleStyleSheet()
 
     ss.add(ParagraphStyle("cover_title", fontSize=28, fontName="Helvetica-Bold",
-                          textColor=PRIMARY, alignment=TA_CENTER, spaceAfter=4))
+                          textColor=PRIMARY, alignment=TA_CENTER, spaceAfter=2))
     ss.add(ParagraphStyle("cover_sub", fontSize=13, fontName="Helvetica",
                           textColor=BLACK, alignment=TA_CENTER, spaceAfter=2))
     ss.add(ParagraphStyle("cover_date", fontSize=10, fontName="Helvetica",
@@ -130,17 +130,17 @@ def _subsection(text, styles):
 def _metric_box(value, label, color, styles):
     """Return a mini table that looks like a metric card."""
     data = [
-        [Paragraph(f'<font color="{color.hexval()}" size="20"><b>{value}</b></font>', styles["body"])],
+        [Paragraph(f'<font color="{color.hexval()}" size="18"><b>{value}</b></font>', styles["body"])],
         [Paragraph(f'<font color="#71717A" size="7">{label}</font>', styles["body"])],
     ]
     t = Table(data, colWidths=[100])
     t.setStyle(TableStyle([
         ("BACKGROUND", (0, 0), (-1, -1), LIGHT_BG),
         ("ALIGN", (0, 0), (-1, -1), "CENTER"),
-        ("TOPPADDING", (0, 0), (0, 0), 10),
-        ("BOTTOMPADDING", (0, -1), (0, -1), 8),
-        ("LINEABOVE", (0, 0), (0, 0), 3, color),
-        ("BOX", (0, 0), (-1, -1), 0.5, colors.HexColor("#E4E4E7")),
+        ("TOPPADDING", (0, 0), (0, 0), 12),
+        ("BOTTOMPADDING", (0, -1), (0, -1), 10),
+        ("LINEABOVE", (0, 0), (0, 0), 2.5, color),
+        ("BOX", (0, 0), (-1, -1), 0.4, colors.HexColor("#E4E4E7")),
     ]))
     return t
 
@@ -166,12 +166,15 @@ def build_pdf(
     elements: list = []
 
     # ── COVER PAGE ──────────────────────────────────────────────────────
-    elements.append(Spacer(1, 40 * mm))
+    elements.append(Spacer(1, 60 * mm))
     elements.append(Paragraph("Reconcile-AI", S["cover_title"]))
+    elements.append(Spacer(1, 3 * mm))
     elements.append(Paragraph("Settlement Reconciliation Report", S["cover_sub"]))
-    elements.append(HRFlowable(width="40%", thickness=1, color=PRIMARY, spaceAfter=10))
+    elements.append(Spacer(1, 4 * mm))
+    elements.append(HRFlowable(width="40%", thickness=1, color=PRIMARY, spaceAfter=12))
     total = metrics.get("total_transactions", 0)
     elements.append(Paragraph(f"Dataset: {total} transactions  •  {datetime.now(timezone.utc).strftime('%d %B %Y')}", S["cover_date"]))
+    elements.append(Spacer(1, 10 * mm))
 
     # Metric boxes row
     accuracy = f'{metrics.get("true_accuracy", 0) * 100:.1f}%'
@@ -184,11 +187,11 @@ def build_pdf(
         _metric_box(wrong, "Wrong", ROSE, S),
         _metric_box(str(exc_n), "Exceptions", AMBER, S),
     ]
-    row = Table([boxes], colWidths=[110] * 4)
+    row = Table([boxes], colWidths=[115] * 4)
     row.setStyle(TableStyle([("ALIGN", (0, 0), (-1, -1), "CENTER"),
                               ("VALIGN", (0, 0), (-1, -1), "TOP")]))
     elements.append(row)
-    elements.append(Spacer(1, 20 * mm))
+    elements.append(Spacer(1, 25 * mm))
     elements.append(Paragraph(
         f'<font color="#71717A" size="8">Processing time: {elapsed:.1f}s  •  '
         f'Exception precision: {metrics.get("exception_precision", 0) * 100:.0f}%  •  '
@@ -231,9 +234,9 @@ def build_pdf(
                 Paragraph(m.get("bank_id", ""), S["small"]),
                 f'T{m.get("tier", 0)}',
                 f'{m.get("confidence", 0) * 100:.0f}%',
-                Paragraph(str(m.get("reason_code", ""))[:28], S["small"]),
+                Paragraph(str(m.get("reason_code", "")), S["small"]),
             ])
-        elements.append(_styled_table(m_data, [95, 90, 30, 55, 110], PRIMARY, 7))
+        elements.append(_styled_table(m_data, [90, 85, 25, 50, 130], PRIMARY, 7))
         elements.append(Spacer(1, 6 * mm))
 
     # ── SECTION 3: EXCEPTIONS ───────────────────────────────────────────
@@ -241,14 +244,16 @@ def build_pdf(
         elements.append(_section("Honest Exceptions", S))
         e_data = [["Record ID", "Amount", "Date", "Reason Code", "Suggestion"]]
         for u in unmatched:
+            suggestion = u.get("suggestion", "")
+            reason = u.get("reason_code", "")
             e_data.append([
                 Paragraph(str(u.get("id", u.get("razorpay_id", ""))), S["small"]),
                 f'₹{u.get("amount", 0):,.2f}',
                 str(u.get("date", ""))[:10],
-                Paragraph(str(u.get("reason_code", ""))[:24], S["small"]),
-                Paragraph(str(u.get("suggestion", ""))[:36], S["small"]),
+                Paragraph(str(reason), S["small"]),
+                Paragraph(str(suggestion), S["small"]),
             ])
-        elements.append(_styled_table(e_data, [80, 60, 60, 90, 140], AMBER, 7))
+        elements.append(_styled_table(e_data, [75, 55, 50, 95, 175], AMBER, 7))
         elements.append(Spacer(1, 6 * mm))
 
     # ── SECTION 4: ANOMALIES ────────────────────────────────────────────
