@@ -116,8 +116,10 @@ function App() {
   const handleRunUpload = async () => {
     if (!files.razorpay || !files.bank || !files.orders) return
     setLoading(true)
+    setStreamProgress({ phase: 'uploading', progress: 10, message: 'Uploading files…' })
     try {
       const data = await reconcile(files.razorpay, files.bank, files.orders)
+      setStreamProgress({ phase: 'done', progress: 100, message: 'Complete' })
       setResult({
         matches: data.matches,
         exceptions: data.unmatched,
@@ -130,7 +132,10 @@ function App() {
     } catch (e) {
       console.error(e)
     } finally {
-      setLoading(false)
+      setTimeout(() => {
+        setStreamProgress(null)
+        setLoading(false)
+      }, 400)
     }
   }
 
