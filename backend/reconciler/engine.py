@@ -77,7 +77,7 @@ class ReconciliationEngine:
 
         # ---- Self-learning: apply previously recorded corrections ----
         if progress_cb:
-            progress_cb("learning", 5, f"Applying {len(CORRECTIONS)} self-learning corrections…")
+            progress_cb("learning", 5, f"Applying {len(self._corrections)} self-learning corrections…")
         corrections_applied = 0
         for rp in list(razorpay_records):
             correction = self._find_correction(rp.id)
