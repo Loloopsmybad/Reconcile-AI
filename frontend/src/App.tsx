@@ -64,16 +64,8 @@ function App() {
     if (result) resultTimeline()
   }, [result])
 
-  useEffect(() => {
-    if (result && !loading) {
-      const t = setTimeout(() => {
-        document.getElementById('results')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-      }, 100)
-      return () => clearTimeout(t)
-    }
-  }, [result, loading])
-
   const handleRunDemo = async () => {
+    document.getElementById('demo-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
     setLoading(true)
     setStreamProgress({ phase: 'starting', progress: 0, message: 'Initializing…' })
     try {

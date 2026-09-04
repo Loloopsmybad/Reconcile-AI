@@ -68,6 +68,13 @@ export default function Hero({ onRunDemo, loading, datasetSize, onSizeChange }: 
             {loading ? 'Reconciling…' : 'Run Demo'}
             {!loading && <ArrowRight className="size-4" />}
           </button>
+          <button
+            onClick={() => document.getElementById('demo-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
+            className="inline-flex items-center gap-2 rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-6 py-3 text-sm font-medium text-emerald-300 transition hover:bg-emerald-500/20"
+          >
+            <Zap className="size-4 text-emerald-400" />
+            Try Now
+          </button>
           <a
             href="#how-it-works"
             onClick={(e) => {
