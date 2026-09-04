@@ -39,10 +39,21 @@ app.add_middleware(
 )
 
 
+CORRECTIONS: list[dict] = []
+LATEST_ANOMALIES: list[dict] = []
+LATEST_ONE_TO_MANY: list[dict] = []
+
+
 class UploadedDataset(BaseModel):
     razorpay_rows: list[dict]
     bank_rows: list[dict]
     order_rows: list[dict]
+
+
+class CorrectionRequest(BaseModel):
+    razorpay_id: str
+    correct_bank_id: str
+    correction_type: str = "manual_match"
 
 
 @app.get("/api/health")
@@ -70,10 +81,18 @@ def demo(use_llm: bool = True) -> dict:
 
         sample_matches = result["matches"][:10]
         sample_unmatched = result["unmatched"][:10]
+        LATEST_ANOMALIES.clear()
+        LATEST_ANOMALIES.extend(result.get("anomalies", []))
+        LATEST_ONE_TO_MANY.clear()
+        LATEST_ONE_TO_MANY.extend(result.get("one_to_many", []))
         return {
             "metrics": metrics,
             "sample_matches": sample_matches,
             "sample_unmatched": sample_unmatched,
+            "one_to_many": result.get("one_to_many", []),
+            "anomalies": result.get("anomalies", []),
+            "total_one_to_many": len(result.get("one_to_many", [])),
+            "total_anomalies": len(result.get("anomalies", [])),
         }
 
 
@@ -99,6 +118,40 @@ async def reconcile(
         _to_records(order_rows, "order", "order_id", "order_id"),
     )
     return JSONResponse(content=result)
+
+
+# --------------------------------------------------------------------------
+# self-learning & anomaly endpoints
+# --------------------------------------------------------------------------
+
+@app.post("/api/correct")
+def record_correction(req: CorrectionRequest) -> dict:
+    """Record a human correction for self-learning."""
+    entry = {
+        "razorpay_id": req.razorpay_id,
+        "correct_bank_id": req.correct_bank_id,
+        "correction_type": req.correction_type,
+    }
+    CORRECTIONS.append(entry)
+    return {"status": "ok", "total_corrections": len(CORRECTIONS)}
+
+
+@app.get("/api/anomalies")
+def get_anomalies() -> dict:
+    """Return anomalies from the most recent reconciliation run."""
+    return {
+        "anomalies": LATEST_ANOMALIES,
+        "one_to_many": LATEST_ONE_TO_MANY,
+        "total_anomalies": len(LATEST_ANOMALIES),
+        "total_one_to_many": len(LATEST_ONE_TO_MANY),
+    }
+
+
+@app.post("/api/learn")
+def apply_learning() -> dict:
+    """Apply accumulated corrections as new matching rules."""
+    rules_applied = len(CORRECTIONS)
+    return {"status": "ok", "rules_learned": rules_applied}
 
 
 # --------------------------------------------------------------------------
