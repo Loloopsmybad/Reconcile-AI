@@ -147,27 +147,32 @@ async def demo_stream(use_llm: bool = True, size: int = 60):
 
             yield {"event": "progress", "data": json.dumps({"phase": "ready", "progress": 10, "message": f"Loaded {len(rp)} Razorpay, {len(bank)} bank, {len(orders)} order records"})}
 
-            def on_progress(phase, progress, message):
-                pass
-
-            def streaming_progress(phase, progress, message):
-                pass
-
-            # We need to call the engine synchronously but emit SSE events
-            # Use a list to capture progress callbacks from within the engine
-            progress_events = []
+            import asyncio
+            progress_queue: asyncio.Queue = asyncio.Queue()
 
             def capture_progress(phase, progress, message):
-                progress_events.append({"phase": phase, "progress": progress, "message": message})
+                progress_queue.put_nowait({"phase": phase, "progress": progress, "message": message})
 
             engine = ReconciliationEngine(use_llm=use_llm)
             t0 = time.time()
-            result = engine.reconcile(rp, bank, orders, progress_cb=capture_progress)
+
+            loop = asyncio.get_event_loop()
+            engine_task = loop.run_in_executor(
+                None, lambda: engine.reconcile(rp, bank, orders, progress_cb=capture_progress)
+            )
+
+            while not engine_task.done():
+                try:
+                    evt = await asyncio.wait_for(progress_queue.get(), timeout=0.5)
+                    yield {"event": "progress", "data": json.dumps(evt)}
+                except asyncio.TimeoutError:
+                    pass
+
+            result = engine_task.result()
             elapsed = round(time.time() - t0, 2)
 
-            # Emit captured progress events
-            for evt in progress_events:
-                yield {"event": "progress", "data": json.dumps(evt)}
+            while not progress_queue.empty():
+                yield {"event": "progress", "data": json.dumps(progress_queue.get_nowait())}
 
             metrics = score_results(result, gt)
 
