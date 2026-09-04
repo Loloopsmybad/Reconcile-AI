@@ -64,6 +64,15 @@ function App() {
     if (result) resultTimeline()
   }, [result])
 
+  useEffect(() => {
+    if (result && !loading) {
+      const t = setTimeout(() => {
+        document.getElementById('results')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      }, 100)
+      return () => clearTimeout(t)
+    }
+  }, [result, loading])
+
   const handleRunDemo = async () => {
     setLoading(true)
     setStreamProgress({ phase: 'starting', progress: 0, message: 'Initializing…' })
@@ -97,9 +106,6 @@ function App() {
             })
           }
           setTimeout(() => tryFetchAnalytics(0), 1500)
-          setTimeout(() => {
-            document.getElementById('results')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-          }, 600)
         },
         (err) => {
           console.error(err)
