@@ -117,8 +117,18 @@ function App() {
     if (!files.razorpay || !files.bank || !files.orders) return
     setLoading(true)
     setStreamProgress({ phase: 'uploading', progress: 10, message: 'Uploading files…' })
+
+    const progressTick = setInterval(() => {
+      setStreamProgress(prev => {
+        if (!prev) return prev
+        const next = Math.min(prev.progress + 8, 92)
+        return { phase: 'reconciling', progress: next, message: 'Reconciling records across three sources…' }
+      })
+    }, 3000)
+
     try {
       const data = await reconcile(files.razorpay, files.bank, files.orders)
+      clearInterval(progressTick)
       setStreamProgress({ phase: 'done', progress: 100, message: 'Complete' })
       setResult({
         matches: data.matches,
@@ -130,6 +140,7 @@ function App() {
       })
       fetchAnalytics().then((d) => { if (d) setAnalytics(d) }).catch(console.error)
     } catch (e) {
+      clearInterval(progressTick)
       console.error(e)
     } finally {
       setTimeout(() => {

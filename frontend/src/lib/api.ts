@@ -96,7 +96,7 @@ export async function downloadReport() {
       alert('Backend is not running. Please start the backend server.')
       return
     }
-    window.open(`${BASE}/api/report`, '_blank')
+    window.open(`${BASE}/api/report?_t=${Date.now()}`, '_blank')
   } catch {
     alert('Cannot reach backend. Make sure uvicorn is running on port 8000.')
   }
@@ -104,12 +104,17 @@ export async function downloadReport() {
 
 export async function fetchAnalytics(): Promise<AnalyticsData | null> {
   try {
-    const res = await fetch(`${BASE}/api/analytics`)
+    const res = await fetch(`${BASE}/api/analytics?_t=${Date.now()}`, {
+      cache: 'no-store',
+      headers: { 'Cache-Control': 'no-cache' },
+    })
     if (!res.ok) return null
     const data = await res.json()
+    console.log('[Analytics]', data?.status, data?.revenue_leakage?.total_leakage)
     if (data?.status !== 'ok') return null
     return data as AnalyticsData
-  } catch {
+  } catch (e) {
+    console.error('[Analytics] fetch failed:', e)
     return null
   }
 }
