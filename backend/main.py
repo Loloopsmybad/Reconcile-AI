@@ -211,8 +211,8 @@ async def demo_stream(use_llm: bool = True, size: int = 60):
 @app.post("/api/reconcile")
 async def reconcile(
     razorpay: UploadFile = File(...),
-    bank: File(...),
-    orders: File(...),
+    bank: UploadFile = File(...),
+    orders: UploadFile = File(...),
 ) -> JSONResponse:
     global LATEST_RESULT, LATEST_METRICS, LATEST_ORDER_ROWS, LATEST_ANOMALIES, LATEST_ONE_TO_MANY
     rp_rows = _decode_csv(await razorpay.read())
