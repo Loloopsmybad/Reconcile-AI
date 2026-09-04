@@ -1,0 +1,362 @@
+{
+  "STL3341057": {
+    "bank_ref": "RP890779946",
+    "order_id": "ORD334053",
+    "match_type": "exact",
+    "notes": "All three sources agree on amount and date."
+  },
+  "STL4668136": {
+    "bank_ref": "RP349817734",
+    "order_id": "ORD198246",
+    "match_type": "exact",
+    "notes": "All three sources agree on amount and date."
+  },
+  "STL8038374": {
+    "bank_ref": "RP336696312",
+    "order_id": "ORD835392",
+    "match_type": "exact",
+    "notes": "All three sources agree on amount and date."
+  },
+  "STL8090293": {
+    "bank_ref": "RP465341213",
+    "order_id": "ORD832052",
+    "match_type": "exact",
+    "notes": "All three sources agree on amount and date."
+  },
+  "STL2556017": {
+    "bank_ref": "RP507943839",
+    "order_id": "ORD207175",
+    "match_type": "exact",
+    "notes": "All three sources agree on amount and date."
+  },
+  "STL8707870": {
+    "bank_ref": "RP675770529",
+    "order_id": "ORD145561",
+    "match_type": "exact",
+    "notes": "All three sources agree on amount and date."
+  },
+  "STL7067228": {
+    "bank_ref": "RP719927151",
+    "order_id": "ORD759176",
+    "match_type": "exact",
+    "notes": "All three sources agree on amount and date."
+  },
+  "STL2338687": {
+    "bank_ref": "RP349957310",
+    "order_id": "ORD403445",
+    "match_type": "exact",
+    "notes": "All three sources agree on amount and date."
+  },
+  "STL3728882": {
+    "bank_ref": "RP497478786",
+    "order_id": "ORD482554",
+    "match_type": "exact",
+    "notes": "All three sources agree on amount and date."
+  },
+  "STL2197935": {
+    "bank_ref": "RP754049436",
+    "order_id": "ORD779514",
+    "match_type": "exact",
+    "notes": "All three sources agree on amount and date."
+  },
+  "STL7366205": {
+    "bank_ref": "RP389854268",
+    "order_id": "ORD584714",
+    "match_type": "exact",
+    "notes": "All three sources agree on amount and date."
+  },
+  "STL4842788": {
+    "bank_ref": "RP982403818",
+    "order_id": "ORD158655",
+    "match_type": "exact",
+    "notes": "All three sources agree on amount and date."
+  },
+  "STL6279418": {
+    "bank_ref": "RP328306011",
+    "order_id": "ORD694731",
+    "match_type": "exact",
+    "notes": "All three sources agree on amount and date."
+  },
+  "STL3396987": {
+    "bank_ref": "RP384412919",
+    "order_id": "ORD581141",
+    "match_type": "exact",
+    "notes": "All three sources agree on amount and date."
+  },
+  "STL8187926": {
+    "bank_ref": "RP726563708",
+    "order_id": "ORD712982",
+    "match_type": "exact",
+    "notes": "All three sources agree on amount and date."
+  },
+  "STL9279821": {
+    "bank_ref": "RP197613238",
+    "order_id": "ORD634277",
+    "match_type": "exact",
+    "notes": "All three sources agree on amount and date."
+  },
+  "STL8082668": {
+    "bank_ref": "RP740389325",
+    "order_id": "ORD813536",
+    "match_type": "exact",
+    "notes": "All three sources agree on amount and date."
+  },
+  "STL5218028": {
+    "bank_ref": "RP694021782",
+    "order_id": "ORD654816",
+    "match_type": "exact",
+    "notes": "All three sources agree on amount and date."
+  },
+  "STL6707197": {
+    "bank_ref": "RP219778234",
+    "order_id": "ORD772097",
+    "match_type": "exact",
+    "notes": "All three sources agree on amount and date."
+  },
+  "STL5418934": {
+    "bank_ref": "RP637500247",
+    "order_id": "ORD857168",
+    "match_type": "exact",
+    "notes": "All three sources agree on amount and date."
+  },
+  "STL4337174": {
+    "bank_ref": "RP264109919",
+    "order_id": "ORD738551",
+    "match_type": "exact",
+    "notes": "All three sources agree on amount and date."
+  },
+  "STL1009594": {
+    "bank_ref": "RP743111853",
+    "order_id": "ORD656116",
+    "match_type": "exact",
+    "notes": "All three sources agree on amount and date."
+  },
+  "STL6159230": {
+    "bank_ref": "RP357109965",
+    "order_id": "ORD972064",
+    "match_type": "exact",
+    "notes": "All three sources agree on amount and date."
+  },
+  "STL9153566": {
+    "bank_ref": "RP976198296",
+    "order_id": "ORD867460",
+    "match_type": "exact",
+    "notes": "All three sources agree on amount and date."
+  },
+  "STL3770370": {
+    "bank_ref": "RP384602384",
+    "order_id": "ORD676510",
+    "match_type": "exact",
+    "notes": "All three sources agree on amount and date."
+  },
+  "STL4374754": {
+    "bank_ref": "RP865523129",
+    "order_id": "ORD865388",
+    "match_type": "exact",
+    "notes": "All three sources agree on amount and date."
+  },
+  "STL3030113": {
+    "bank_ref": "RP366186631",
+    "order_id": "ORD573417",
+    "match_type": "exact",
+    "notes": "All three sources agree on amount and date."
+  },
+  "STL4694634": {
+    "bank_ref": "RP107721109",
+    "order_id": "ORD341292",
+    "match_type": "exact",
+    "notes": "All three sources agree on amount and date."
+  },
+  "STL2188789": {
+    "bank_ref": "RP652070932",
+    "order_id": "ORD446479",
+    "match_type": "exact",
+    "notes": "All three sources agree on amount and date."
+  },
+  "STL8930103": {
+    "bank_ref": "RP360916298",
+    "order_id": "ORD858490",
+    "match_type": "exact",
+    "notes": "All three sources agree on amount and date."
+  },
+  "STL6944126": {
+    "bank_ref": "RP554814084",
+    "order_id": "ORD551989",
+    "match_type": "exact",
+    "notes": "All three sources agree on amount and date."
+  },
+  "STL2016911": {
+    "bank_ref": "RP532311310",
+    "order_id": "ORD203198",
+    "match_type": "exact",
+    "notes": "All three sources agree on amount and date."
+  },
+  "STL3351868": {
+    "bank_ref": "RP552991960",
+    "order_id": "ORD570405",
+    "match_type": "exact",
+    "notes": "All three sources agree on amount and date."
+  },
+  "STL8434500": {
+    "bank_ref": "RP967607278",
+    "order_id": "ORD179046",
+    "match_type": "exact",
+    "notes": "All three sources agree on amount and date."
+  },
+  "STL1247595": {
+    "bank_ref": "RP200140141",
+    "order_id": "ORD976638",
+    "match_type": "exact",
+    "notes": "All three sources agree on amount and date."
+  },
+  "STL1983738": {
+    "bank_ref": "RP276777762",
+    "order_id": "ORD520521",
+    "match_type": "exact",
+    "notes": "All three sources agree on amount and date."
+  },
+  "STL8633773": {
+    "bank_ref": "RP406284028",
+    "order_id": "ORD923267",
+    "match_type": "exact",
+    "notes": "All three sources agree on amount and date."
+  },
+  "STL2022698": {
+    "bank_ref": "RP903132646",
+    "order_id": "ORD161324",
+    "match_type": "exact",
+    "notes": "All three sources agree on amount and date."
+  },
+  "STL9910817": {
+    "bank_ref": "RP269042105",
+    "order_id": "ORD994141",
+    "match_type": "exact",
+    "notes": "All three sources agree on amount and date."
+  },
+  "STL4946066": {
+    "bank_ref": "RP533550699",
+    "order_id": "ORD808011",
+    "match_type": "exact",
+    "notes": "All three sources agree on amount and date."
+  },
+  "STL8033426": {
+    "bank_ref": "RP805849060",
+    "order_id": "ORD185965",
+    "match_type": "exact",
+    "notes": "All three sources agree on amount and date."
+  },
+  "STL5004485": {
+    "bank_ref": "RP385201412",
+    "order_id": "ORD429445",
+    "match_type": "exact",
+    "notes": "All three sources agree on amount and date."
+  },
+  "STL2217071": {
+    "bank_ref": "RP110002396",
+    "order_id": "ORD888387",
+    "match_type": "exact",
+    "notes": "All three sources agree on amount and date."
+  },
+  "STL3222252": {
+    "bank_ref": "RP474745382",
+    "order_id": "ORD378082",
+    "match_type": "exact",
+    "notes": "All three sources agree on amount and date."
+  },
+  "STL6075395": {
+    "bank_ref": "RP756783995",
+    "order_id": "ORD974244",
+    "match_type": "exact",
+    "notes": "All three sources agree on amount and date."
+  },
+  "STL3253031": {
+    "bank_ref": "RP383968123",
+    "order_id": "ORD208618",
+    "match_type": "fee",
+    "notes": "Amount gap of \u20b90.9 explained by fee deduction."
+  },
+  "STL6752576": {
+    "bank_ref": null,
+    "order_id": "ORD852470",
+    "match_type": "orphan",
+    "notes": "Settlement recorded but no matching bank credit (pending)."
+  },
+  "STL2548511": {
+    "bank_ref": null,
+    "order_id": "ORD153266",
+    "match_type": "orphan",
+    "notes": "Settlement recorded but no matching bank credit (pending)."
+  },
+  "STL5394880": {
+    "bank_ref": "rp273497327",
+    "order_id": "OR768061",
+    "match_type": "ref_diff",
+    "notes": "References differ in casing/format but are same txn."
+  },
+  "STL3500715": {
+    "bank_ref": null,
+    "order_id": "ORD824586",
+    "match_type": "orphan",
+    "notes": "Settlement recorded but no matching bank credit (pending)."
+  },
+  "STL1669324": {
+    "bank_ref": "RP484194737",
+    "order_id": "ORD482364",
+    "match_type": "tplus1",
+    "notes": "Settlement date is T+1 vs order date."
+  },
+  "STL3592974": {
+    "bank_ref": "RP354194771",
+    "order_id": "ORD526117",
+    "match_type": "tplus1",
+    "notes": "Settlement date is T+1 vs order date."
+  },
+  "STL7907400": {
+    "bank_ref": "RP961393416",
+    "order_id": "ORD448321",
+    "match_type": "tplus1",
+    "notes": "Settlement date is T+1 vs order date."
+  },
+  "STL1649691": {
+    "bank_ref": "RP605399561",
+    "order_id": "ORD501124",
+    "match_type": "tplus1",
+    "notes": "Settlement date is T+1 vs order date."
+  },
+  "STL4740036": {
+    "bank_ref": "RP125409494",
+    "order_id": "ORD338651",
+    "match_type": "tplus1",
+    "notes": "Settlement date is T+1 vs order date."
+  },
+  "STL5682940": {
+    "bank_ref": "rp477040284",
+    "order_id": "OR910891",
+    "match_type": "ref_diff",
+    "notes": "References differ in casing/format but are same txn."
+  },
+  "STL5453786": {
+    "bank_ref": "rp141078352",
+    "order_id": "OR287241",
+    "match_type": "ref_diff",
+    "notes": "References differ in casing/format but are same txn."
+  },
+  "STL7462506": {
+    "bank_ref": null,
+    "order_id": "ORD221263",
+    "match_type": "orphan",
+    "notes": "Settlement recorded but no matching bank credit (pending)."
+  },
+  "STL4305700": {
+    "bank_ref": "RP491079829",
+    "order_id": "ORD945687",
+    "match_type": "fee",
+    "notes": "Amount gap of \u20b91.0 explained by fee deduction."
+  },
+  "STL6038571": {
+    "bank_ref": "rp644518647",
+    "order_id": "OR230679",
+    "match_type": "ref_diff",
+    "notes": "References differ in casing/format but are same txn."
+  }
+}
