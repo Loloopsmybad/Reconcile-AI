@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from './ui'
 import { cn } from '../lib/utils'
 import { countUp } from '../lib/anim'
@@ -22,10 +22,13 @@ interface MetricCardProps {
 
 export function MetricCard({ label, value, icon, tone = 'default', trendText }: MetricCardProps) {
   const valueRef = useRef<HTMLSpanElement>(null)
+  const [displayed, setDisplayed] = useState(value)
 
   useEffect(() => {
-    if (valueRef.current) {
+    if (valueRef.current && value > 0) {
       countUp(valueRef.current, value, 0)
+    } else {
+      setDisplayed(value)
     }
   }, [value])
 
@@ -40,7 +43,7 @@ export function MetricCard({ label, value, icon, tone = 'default', trendText }: 
       <CardContent>
         <div className="flex items-baseline gap-2">
           <span ref={valueRef} className="text-3xl font-semibold tracking-tight tabular text-zinc-100">
-            0
+            {displayed}
           </span>
           {trendText && (
             <span className="text-xs font-medium text-emerald-400">↑ {trendText}</span>

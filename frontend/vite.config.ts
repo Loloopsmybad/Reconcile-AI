@@ -12,5 +12,8 @@ export default defineConfig({
         changeOrigin: true,
       },
     },
+    headers: {
+      'Cache-Control': 'no-store',
+    },
   },
 })

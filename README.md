@@ -179,9 +179,11 @@ Applies tolerance when IDs aren't byte-identical:
 Records that pass neither tier are handed to the LLM. The prompt frames it from the mindset of a payments analyst:
 > *"You are a senior payments reconciliation analyst… settlements may land T+1… Razorpay takes a fee… references may differ in case/format… Return JSON decisions."*
 
-The LLM reasons about **fee gaps**, **ambiguous near-matches**, and **true orphans**, returning `{ bank_id | null, confidence, reason }` for each. It's only called when rules can't resolve, so it never overrides a deterministic answer.
+The LLM reasons about **fee gaps**, **ambiguous near-matches**, and **true orphans**, returning `{ bank_id | null, confidence, reason_code, field_diffs }` for each. It's only called when rules can't resolve, so it never overrides a deterministic answer.
 
 > **No API key?** The `RuleBasedJudge` fallback reproduces the expected conclusions (fee gaps, date windows, ref differences) so the demo runs **fully offline** with identical output.
+> 
+> **With API key?** Uses OpenRouter's free `nvidia/nemotron-3.5-lightning:free` model — no billing required.
 
 ### 3. Evaluator — `reconciler/evaluator.py`
 
@@ -254,7 +256,7 @@ uvicorn main:app --port 8000        # start API → http://localhost:8000
 
 You should see `Uvicorn running on http://127.0.0.1:8000`.
 
-> Optional: set `GEMINI_API_KEY` (or `OPENAI_API_KEY`) to enable the AI tier.
+> Optional: set `OPENROUTER_API_KEY` or place your key in `~/api_key.txt` to enable the AI tier via OpenRouter (free).
 > Without a key, a built-in rule-based judge handles exceptions so the demo
 > runs **fully offline**.
 
