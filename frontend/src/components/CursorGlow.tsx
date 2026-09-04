@@ -65,15 +65,24 @@ export default function CursorGlow() {
     }
   }, [visible])
 
+  // dot offset: sits on the inner edge of the ring (bottom side)
+  // ring 48px default → radius 24, dot 14px → radius 7, offset = 24 - 7 = 17
+  // ring 60px hover → radius 30, dot 10px → radius 5, offset = 30 - 5 = 25
+  const dotOffsetY = hovering ? 25 : 17
+
   return (
     <>
-      {/* Dot — follows cursor instantly */}
+      {/* Dot — sits on inner edge of ring */}
       <div
         ref={dotRef}
-        className="pointer-events-none fixed top-0 left-0 z-[9999] -translate-x-1/2 -translate-y-1/2"
+        className="pointer-events-none fixed top-0 left-0 z-[9999] -translate-x-1/2"
         style={{
           opacity: visible ? 1 : 0,
           transition: 'opacity 0.2s ease',
+          marginTop: `${dotOffsetY}px`,
+          transitionProperty: 'opacity, margin-top',
+          transitionDuration: '0.2s, 0.3s',
+          transitionTimingFunction: 'ease, ease',
         }}
       >
         <div
@@ -92,7 +101,7 @@ export default function CursorGlow() {
         />
       </div>
 
-      {/* Ring — follows with delay + inner fill */}
+      {/* Ring — larger, follows with delay + inner fill */}
       <div
         ref={ringRef}
         className="pointer-events-none fixed top-0 left-0 z-[9998] -translate-x-1/2 -translate-y-1/2"
@@ -104,8 +113,8 @@ export default function CursorGlow() {
         <div
           className="rounded-full"
           style={{
-            width: hovering ? 44 : 36,
-            height: hovering ? 44 : 36,
+            width: hovering ? 60 : 48,
+            height: hovering ? 60 : 48,
             border: `1.5px solid ${hovering ? 'rgba(139, 92, 246, 0.7)' : 'rgba(196, 181, 253, 0.3)'}`,
             background: hovering
               ? 'radial-gradient(circle, rgba(139, 92, 246, 0.12) 0%, rgba(139, 92, 246, 0.04) 70%, transparent 100%)'
